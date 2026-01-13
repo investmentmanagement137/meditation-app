@@ -2,8 +2,14 @@ import React, { useState } from 'react';
 import BaseModal from '../components/BaseModal';
 import useLocalStorage from '../hooks/useLocalStorage';
 
-const LogModal = ({ isOpen, onClose }) => {
-    const [logs, setLogs] = useLocalStorage('meditation_sessions', []);
+const LogModal = ({ isOpen, onClose, logs: propLogs }) => {
+    const [localLogs, setLocalLogs] = useLocalStorage('meditation_sessions', []);
+    // Use propLogs if provided (from App refresh), otherwise fall back to local hook
+    // Actually, to ensure refresh, we should rely on the prop if passed, or force re-read.
+    // The issue is App.jsx adds to localStorage, but this hook might not update if it's not listening to storage events from same window.
+    // Best fix: App.jsx passes current logs.
+    const logs = propLogs || localLogs;
+
     const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
     const [isEditingKey, setIsEditingKey] = useState(false);
     const [tempKey, setTempKey] = useState('');

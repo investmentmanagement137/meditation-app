@@ -211,6 +211,7 @@ function App() {
       <LogModal
         isOpen={isLogModalOpen}
         onClose={() => setIsLogModalOpen(false)}
+        logs={JSON.parse(localStorage.getItem('meditation_sessions') || '[]')}
       />
     </div>
   );

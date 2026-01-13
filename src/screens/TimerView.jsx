@@ -148,17 +148,11 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
                     justifyContent: 'center',
                     padding: '40px', // Parsing padding to avoid hitting ring border
                     zIndex: 10
-                }}>
-                    {/* Quote Container - Reduced size in CSS usually, let's allow it to fit */}
-                    <div style={{ width: '100%', marginBottom: '10px', height: 'auto', minHeight: '60px' }}>
-                        <QuoteCarousel quotes={quotes} />
-                    </div>
+            </div>
 
-                    {/* Digital Clock - Adjusted size for inside ring */}
-                    <div className="digital-clock" style={{ fontSize: '48px', marginTop: '0', lineHeight: 1 }}>
-                        {m}:{s}
-                    </div>
-                </div>
+            {/* Digital Clock - Moved below ring */}
+            <div className="digital-clock" style={{ fontSize: '64px', marginTop: '20px', lineHeight: 1, fontWeight: 300, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                {m}:{s}
             </div>
 
             {/* Controls remain outside/below */}
