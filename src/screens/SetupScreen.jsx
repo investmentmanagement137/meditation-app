@@ -74,10 +74,24 @@ const SetupScreen = ({
                 </div>
             </div>
 
-            <button className="btn-primary btn-begin" onClick={handleStart}>Begin Session</button>
-            <button className="log-btn" onClick={openLogs}>
-                <span>Logs</span>
-            </button>
+            {/* Bottom Controls */}
+            <div style={{
+                position: 'absolute',
+                bottom: '40px',
+                left: '0',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '0 20px',
+                boxSizing: 'border-box'
+            }}>
+                <button className="btn-primary btn-begin" onClick={handleStart} style={{ width: '100%', maxWidth: '400px' }}>Begin Session</button>
+                <button className="log-btn" onClick={openLogs}>
+                    <span>Logs</span>
+                </button>
+            </div>
         </div>
     );
 };

@@ -153,7 +153,16 @@ const TimerScreen = ({ sessionConfig, onEndSession }) => {
             </div>
 
             {/* Controls remain outside/below */}
-            <div className="timer-controls" style={{ marginTop: '40px', width: '100%', maxWidth: '300px' }}>
+            {/* Controls moved to bottom */}
+            <div className="timer-controls" style={{
+                position: 'absolute',
+                bottom: '50px',
+                width: '100%',
+                maxWidth: '300px',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '20px'
+            }}>
                 <button className="control-btn" onClick={toggleTimer}>{isPaused ? '▶' : '⏸'} </button>
                 <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>⏹</button>
             </div>
