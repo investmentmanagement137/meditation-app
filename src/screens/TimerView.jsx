@@ -19,6 +19,40 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
         return () => console.log("TimerScreen Unmounted");
     }, []);
 
+    // Screen Wake Lock
+    useEffect(() => {
+        let wakeLock = null;
+
+        const requestWakeLock = async () => {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active');
+                }
+            } catch (err) {
+                console.log(`${err.name}, ${err.message}`);
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        };
+
+        requestWakeLock();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => {
+                    console.log('Wake Lock released');
+                });
+            }
+        };
+    }, []);
+
     const { duration = 10, interval: intervalSetting = '0', audioId, note } = sessionConfig || {};
     const [quotes, setQuotes] = useState(DEFAULT_QUOTES);
     const [geminiApiKey] = useLocalStorage('gemini_api_key', '');
