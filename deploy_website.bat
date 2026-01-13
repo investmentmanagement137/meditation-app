@@ -3,6 +3,10 @@ echo ==========================================
 echo      Deploying to GitHub Pages...
 echo ==========================================
 
+:: Fix for missing Git path
+set "PATH=%PATH%;C:\Program Files\Git\cmd"
+echo [INFO] Added Git to PATH.
+
 :: 0. Commit and Push Source Code
 echo [0/4] Saving changes to GitHub...
 git add .
