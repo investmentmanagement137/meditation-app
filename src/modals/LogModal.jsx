@@ -5,14 +5,12 @@ import useLocalStorage from '../hooks/useLocalStorage';
 const LogModal = ({ isOpen, onClose }) => {
     const [logs] = useLocalStorage('meditation_sessions', []);
     const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
-    const [tempKey, setTempKey] = useState(apiKey);
-
-    // Sync tempKey when apiKey changes externally (unlikely but good practice) or on open
-    // actually, we just use local temp state.
+    const [isEditingKey, setIsEditingKey] = useState(false);
 
     const handleSaveKey = () => {
         setApiKey(tempKey);
-        alert('API Key Saved!');
+        setIsEditingKey(false);
+        // alert('API Key Saved!'); // Removed alert to be less intrusive
     };
 
     const reversedLogs = [...logs].reverse();
@@ -42,16 +40,37 @@ const LogModal = ({ isOpen, onClose }) => {
 
             {/* Header / Actions */}
             <div style={{ margin: '0 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div className="api-settings" style={{ display: 'flex', gap: '8px', flex: 1 }}>
-                    <input
-                        type="password"
-                        className="api-input"
-                        placeholder="Gemini API Key..."
-                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--text-secondary)', background: 'var(--background)', color: 'var(--text-primary)' }}
-                        value={tempKey}
-                        onChange={(e) => setTempKey(e.target.value)}
-                    />
-                    <button className="btn-primary" style={{ padding: '8px 12px', fontSize: '12px' }} onClick={handleSaveKey}>Save</button>
+                <div className="api-settings" style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
+                    {apiKey && !isEditingKey ? (
+                        // View Mode
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(76, 175, 80, 0.1)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
+                            <span style={{ fontSize: '13px', color: '#4CAF50', fontWeight: 500 }}>API Key Saved ✓</span>
+                            <button
+                                onClick={() => setIsEditingKey(true)}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '11px', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+                            >
+                                Change
+                            </button>
+                        </div>
+                    ) : (
+                        // Edit Mode
+                        <>
+                            <input
+                                type="password"
+                                className="api-input"
+                                placeholder="Gemini API Key..."
+                                style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--text-secondary)', background: 'var(--background)', color: 'var(--text-primary)' }}
+                                value={tempKey}
+                                onChange={(e) => setTempKey(e.target.value)}
+                            />
+                            <button className="btn-primary" style={{ padding: '8px 12px', fontSize: '12px', width: 'auto' }} onClick={handleSaveKey}>
+                                {apiKey ? 'Update' : 'Save'}
+                            </button>
+                            {isEditingKey && (
+                                <button onClick={() => setIsEditingKey(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>✕</button>
+                            )}
+                        </>
+                    )}
                 </div>
                 <button className="btn-csv" onClick={downloadCSV}>
                     ⬇ CSV
