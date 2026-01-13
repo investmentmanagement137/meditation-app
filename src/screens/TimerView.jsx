@@ -148,14 +148,19 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
                     justifyContent: 'center',
                     padding: '40px', // Parsing padding to avoid hitting ring border
                     zIndex: 10
+                }}>
+                    {/* Quote Container */}
+                    <div style={{ width: '100%', marginBottom: '10px', height: 'auto', minHeight: '60px' }}>
+                        <QuoteCarousel quotes={quotes} />
+                    </div>
+                </div>
             </div>
 
             {/* Digital Clock - Moved below ring */}
-            <div className="digital-clock" style={{ fontSize: '64px', marginTop: '20px', lineHeight: 1, fontWeight: 300, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+            <div className="digital-clock" style={{ fontSize: '64px', marginTop: '40px', lineHeight: 1, fontWeight: 300, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                 {m}:{s}
             </div>
 
-            {/* Controls remain outside/below */}
             {/* Controls moved to bottom */}
             <div className="timer-controls" style={{
                 position: 'absolute',
@@ -170,6 +175,5 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
                 <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>⏹</button>
             </div>
         </div>
-    );
 };
 export default TimerScreen;
