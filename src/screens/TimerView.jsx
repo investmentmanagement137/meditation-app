@@ -174,10 +174,13 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
                         <button
                             className="icon-btn"
                             onClick={onOpenAudioSettings}
-                            style={{ background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px' }}
+                            style={{ background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             title="Change Audio"
                         >
-                            🎵
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
+                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -191,10 +194,23 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
             {/* Controls */}
             <div className="timer-controls-wrapper">
                 <button className="control-btn" onClick={toggleTimer}>
-                    <span className="control-icon-box">{isPaused ? '▶' : '⏸'}</span>
+                    {isPaused ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32" fill="currentColor">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path d="M8 5v14l11-7L8 5z" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32" fill="currentColor">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                        </svg>
+                    )}
                 </button>
                 <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>
-                    <span className="control-icon-box">⏹</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32" fill="currentColor">
+                        <path d="M0 0h24v24H0V0z" fill="none" />
+                        <path d="M6 6h12v12H6z" />
+                    </svg>
                 </button>
             </div>
         </div>

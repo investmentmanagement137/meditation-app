@@ -167,9 +167,20 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                                             borderRadius: '6px',
                                             background: 'rgba(255,255,255,0.1)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: '20px'
+                                            color: 'var(--text-primary)'
                                         }}>
-                                            {audio.type === 'youtube' ? '📺' : '🎵'}
+                                            {audio.type === 'youtube' ? (
+                                                <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" fill="currentColor">
+                                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                                    <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zM5 10l14-7h-14v7z" opacity="0" />
+                                                    <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10 6L8 10l10 5z" /> {/* Play/TV Icon */}
+                                                </svg>
+                                            ) : (
+                                                <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" fill="currentColor">
+                                                    <path d="M0 0h24v24H0V0z" fill="none" />
+                                                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                                                </svg>
+                                            )}
                                         </div>
                                     )}
 
