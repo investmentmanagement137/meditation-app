@@ -41,7 +41,13 @@ const SetupScreen = ({
 
     return (
         <div className="screen-content">
-            <h1>Meditation Timer</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '40px' }}>
+                <h1 style={{ margin: 0 }}>Meditation Timer</h1>
+                <button className="log-btn" onClick={openLogs} style={{ background: 'transparent', width: 'auto', padding: '8px' }}>
+                    <span style={{ fontSize: '24px' }}>📜</span>
+                </button>
+            </div>
+
             <DurationSelector
                 durations={sortedDurations}
                 selectedDuration={selectedDuration}
@@ -93,10 +99,7 @@ const SetupScreen = ({
                 padding: '0 20px',
                 pointerEvents: 'none' // Let clicks pass through if empty areas
             }}>
-                <button className="btn-primary btn-begin" onClick={handleStart} style={{ width: '100%', maxWidth: '400px', pointerEvents: 'auto' }}>Begin Session</button>
-                <button className="log-btn" onClick={openLogs} style={{ pointerEvents: 'auto', position: 'relative', top: '0', right: '0', alignSelf: 'center', background: 'transparent', textDecoration: 'underline' }}>
-                    <span>View Logs</span>
-                </button>
+                <button className="btn-primary btn-begin" onClick={handleStart} style={{ width: '100%', maxWidth: '400px', pointerEvents: 'auto' }}>Start Session</button>
             </div>
         </div>
     );
