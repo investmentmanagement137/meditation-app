@@ -12,7 +12,7 @@ const DEFAULT_QUOTES = [
     { text: "The present moment is filled with joy and happiness.", author: "Thich Nhat Hanh" }
 ];
 
-const TimerScreen = ({ sessionConfig, activeAudioId, onEndSession, setSessionAnalysis, onOpenAudioSettings }) => {
+const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession, setSessionAnalysis, onOpenAudioSettings }) => {
     // Logging for debug
     useEffect(() => {
         console.log("TimerScreen Mounted");
@@ -110,6 +110,47 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onEndSession, setSessionAna
     const { playAudio, stopAudio, pauseAudio, resumeAudio } = useAudio();
     const [savedAudios] = useLocalStorage('meditation_audios', []);
 
+    // Swipe Logic
+    const touchStartRef = useRef(null);
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e) => {
+        touchStartRef.current = e.targetTouches[0].clientX;
+    };
+
+    const onTouchEnd = (e) => {
+        if (!touchStartRef.current) return;
+        const touchEnd = e.changedTouches[0].clientX;
+        const distance = touchStartRef.current - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        if (isLeftSwipe || isRightSwipe) {
+            handleSwipeAudio(isLeftSwipe ? 'next' : 'prev');
+        }
+        touchStartRef.current = null;
+    };
+
+    const handleSwipeAudio = (direction) => {
+        if (!savedAudios || savedAudios.length === 0) return;
+
+        const currentId = activeAudioId !== undefined ? activeAudioId : audioId;
+        const currentIndex = savedAudios.findIndex(a => a.id === currentId);
+
+        let newIndex;
+        if (direction === 'next') {
+            newIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % savedAudios.length;
+        } else {
+            newIndex = currentIndex === -1 ? 0 : (currentIndex - 1 + savedAudios.length) % savedAudios.length;
+        }
+
+        const nextAudio = savedAudios[newIndex];
+        if (nextAudio && onSelectAudio) {
+            console.log(`Swiping ${direction} to: ${nextAudio.name}`);
+            onSelectAudio(nextAudio.id);
+        }
+    };
+
     useEffect(() => {
         // Start Sequence (Bells & Timer only)
         playBell('start');
@@ -176,17 +217,30 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onEndSession, setSessionAna
                 {/* Content Overlay */}
                 <div className="timer-content-overlay">
                     {/* Quote Container */}
-                    <div style={{ width: '100%', marginBottom: '40px', height: 'auto', minHeight: '60px' }}>
+                    <div style={{ width: '100%', marginBottom: '20px', height: 'auto', minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <QuoteCarousel quotes={quotes} />
                     </div>
 
-                    {/* Audio Icon */}
-                    <div className="timer-audio-btn-wrapper">
+                    {/* Audio Icon with Swipe Area */}
+                    <div
+                        className="timer-audio-btn-wrapper"
+                        onTouchStart={onTouchStart}
+                        onTouchEnd={onTouchEnd}
+                        style={{ padding: '20px' }} // Increase touch target
+                    >
                         <button
                             className="icon-btn"
                             onClick={onOpenAudioSettings}
-                            style={{ background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            title="Change Audio"
+                            style={{
+                                background: 'rgba(255,255,255,0.1)',
+                                width: '40px',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backdropFilter: 'blur(4px)'
+                            }}
+                            title="Change Audio (Swipe Left/Right to Cycle)"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
                                 <path d="M0 0h24v24H0V0z" fill="none" />
@@ -197,8 +251,8 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onEndSession, setSessionAna
                 </div>
             </div>
 
-            {/* Digital Clock */}
-            <div className="timer-digital-clock">
+            {/* Digital Clock - Enlarged */}
+            <div className="timer-digital-clock" style={{ fontSize: '100px', fontWeight: 'bold', marginTop: '10px' }}>
                 {m}:{s}
             </div>
 
