@@ -29,12 +29,17 @@ export async function getMotivationalContent(note, apiKey) {
 
         const data = await response.json();
         if (data.candidates && data.candidates[0].content.parts[0].text) {
-            const result = JSON.parse(data.candidates[0].content.parts[0].text);
-            return {
-                ...result,
-                model: 'gemini-1.5-flash',
-                usage: data.usageMetadata
-            };
+            const text = data.candidates[0].content.parts[0].text;
+            // Fix: Parse JSON even if wrapped in markdown code blocks
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const result = JSON.parse(jsonMatch[0]);
+                return {
+                    ...result,
+                    model: 'gemini-1.5-flash',
+                    usage: data.usageMetadata
+                };
+            }
         }
         return null;
     } catch (error) {
