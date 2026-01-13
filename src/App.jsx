@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SetupScreen from './screens/SetupScreen';
 import TimerScreen from './screens/TimerView';
 import EndNoteModal from './modals/EndNoteModal';
@@ -8,17 +8,80 @@ import IntervalModal from './modals/IntervalModal';
 import LogModal from './modals/LogModal';
 import useLocalStorage from './hooks/useLocalStorage';
 
+// Global YouTube Player Reference
+// This is set once when the API is ready and reused
+window.ytPlayer = null;
+
 function App() {
-  // Load YouTube API Globally on Mount
-  React.useEffect(() => {
+  const ytPlayerRef = useRef(null);
+
+  // Load YouTube API and Initialize Player Globally on Mount
+  useEffect(() => {
+    // Create the player host div immediately
+    if (!document.getElementById('yt-player-host')) {
+      const hostDiv = document.createElement('div');
+      hostDiv.id = 'yt-player-host';
+      // Make it invisible but render-able
+      hostDiv.style.position = 'absolute';
+      hostDiv.style.top = '0';
+      hostDiv.style.left = '0';
+      hostDiv.style.width = '1px';
+      hostDiv.style.height = '1px';
+      hostDiv.style.opacity = '0.01';
+      hostDiv.style.pointerEvents = 'none';
+      hostDiv.style.zIndex = '-1';
+      document.body.appendChild(hostDiv);
+    }
+
+    // Load API
     if (!window.YT) {
       window.onYouTubeIframeAPIReady = () => {
-        console.log("Global: YouTube API Ready");
+        console.log("Global: YouTube API Ready - Creating Player");
+        // Create player without a video, just like legacy code
+        window.ytPlayer = new window.YT.Player('yt-player-host', {
+          height: '1',
+          width: '1',
+          playerVars: {
+            'playsinline': 1,
+            'controls': 0,
+            'loop': 1
+          },
+          events: {
+            'onReady': () => console.log("Global: YouTube Player Ready"),
+            'onStateChange': (event) => {
+              // Loop on end
+              if (event.data === window.YT.PlayerState.ENDED) {
+                event.target.playVideo();
+              }
+            },
+            'onError': (e) => console.error("YT Error:", e)
+          }
+        });
       };
       const tag = document.createElement('script');
       tag.src = "https://www.youtube.com/iframe_api";
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } else if (window.YT && window.YT.Player && !window.ytPlayer) {
+      // API already loaded but player not created
+      window.ytPlayer = new window.YT.Player('yt-player-host', {
+        height: '1',
+        width: '1',
+        playerVars: {
+          'playsinline': 1,
+          'controls': 0,
+          'loop': 1
+        },
+        events: {
+          'onReady': () => console.log("Global: YouTube Player Ready"),
+          'onStateChange': (event) => {
+            if (event.data === window.YT.PlayerState.ENDED) {
+              event.target.playVideo();
+            }
+          },
+          'onError': (e) => console.error("YT Error:", e)
+        }
+      });
     }
   }, []);
 
@@ -31,7 +94,6 @@ function App() {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   // -- Lifted State --
-  // We lift these so Modals can update them and SetupScreen reflects changes immediately
   const [durations, setDurations] = useLocalStorage('meditation_durations', [5, 10, 15, 20]);
   const [customIntervals, setCustomIntervals] = useLocalStorage('custom_intervals', []);
   const [savedAudios, setSavedAudios] = useLocalStorage('meditation_audios', [
@@ -40,19 +102,14 @@ function App() {
     { id: '1', name: 'None', type: 'none' }
   ]);
 
-  // Keep selection state here or in SetupScreen? 
-  // SetupScreen is fine for these, but if we want to add a value and auto-select it from a modal, 
-  // it helps to have control or pass the setter down.
   const [selectedDuration, setSelectedDuration] = useLocalStorage('selected_duration', 10);
   const [selectedInterval, setSelectedInterval] = useLocalStorage('selected_interval', '0');
   const [selectedAudioId, setSelectedAudioId] = useLocalStorage('last_audio_id', null);
 
   const handleStartSession = (data) => {
-    // Request Fullscreen
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen denied:', e));
     }
-
     setSessionData(data);
     setCurrentScreen('timer');
   };
@@ -79,24 +136,18 @@ function App() {
           onStartSession={handleStartSession}
           startNote={sessionData.note || ''}
           setStartNote={(n) => setSessionData({ ...sessionData, note: n })}
-
           openAudioModal={() => setIsAudioModalOpen(true)}
           openLogs={() => setIsLogModalOpen(true)}
           openDurationModal={() => setIsDurationModalOpen(true)}
           openIntervalModal={() => setIsIntervalModalOpen(true)}
-
-          // Props for State
           durations={durations}
           selectedDuration={selectedDuration}
           setSelectedDuration={setSelectedDuration}
-
           customIntervals={customIntervals}
           selectedInterval={selectedInterval}
           setSelectedInterval={setSelectedInterval}
-
           savedAudios={savedAudios}
           selectedAudioId={selectedAudioId}
-        // setSelectedAudioId passed via AudioModal select mostly, or we can pass setter
         />
       )}
       {currentScreen === 'timer' && (
@@ -106,7 +157,6 @@ function App() {
         />
       )}
 
-      {/* Modals receiving State Setters */}
       <EndNoteModal
         isOpen={isEndNoteOpen}
         onClose={() => setIsEndNoteOpen(false)}
@@ -119,7 +169,6 @@ function App() {
         onClose={() => setIsAudioModalOpen(false)}
         onSelect={setSelectedAudioId}
         currentAudioId={selectedAudioId}
-
         savedAudios={savedAudios}
         setSavedAudios={setSavedAudios}
       />
@@ -128,7 +177,6 @@ function App() {
         isOpen={isDurationModalOpen}
         onClose={() => setIsDurationModalOpen(false)}
         onSelect={setSelectedDuration}
-
         durations={durations}
         setDurations={setDurations}
       />
@@ -138,7 +186,6 @@ function App() {
         onClose={() => setIsIntervalModalOpen(false)}
         onSelect={setSelectedInterval}
         currentInterval={selectedInterval}
-
         customIntervals={customIntervals}
         setCustomIntervals={setCustomIntervals}
       />
