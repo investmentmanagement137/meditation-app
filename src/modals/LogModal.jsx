@@ -6,11 +6,17 @@ const LogModal = ({ isOpen, onClose }) => {
     const [logs] = useLocalStorage('meditation_sessions', []);
     const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
     const [isEditingKey, setIsEditingKey] = useState(false);
+    // Use local state for the input field to avoid jitter
+    const [tempKey, setTempKey] = useState('');
+
+    // Update temp key when entering edit mode or when apiKey changes
+    React.useEffect(() => {
+        if (apiKey) setTempKey(apiKey);
+    }, [apiKey]);
 
     const handleSaveKey = () => {
         setApiKey(tempKey);
         setIsEditingKey(false);
-        // alert('API Key Saved!'); // Removed alert to be less intrusive
     };
 
     const reversedLogs = [...logs].reverse();

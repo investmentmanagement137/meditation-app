@@ -14,7 +14,31 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
     const [activeTab, setActiveTab] = useState('list'); // 'list' or 'add'
 
     const handleAddYouTube = async () => {
-        const videoId = AudioUtils.extractVideoID(youtubeUrl);
+        // Robust handling similar to legacy code
+        const url = youtubeUrl.trim();
+        if (!url) return;
+
+        // 1. Check for Playlist
+        if (url.includes('list=')) {
+            const videoId = AudioUtils.extractVideoID(url);
+            if (videoId) {
+                // It's a playlist but has a video ID (e.g. watch?v=...&list=...)
+                const title = await AudioUtils.fetchYouTubeTitle(videoId);
+                const newAudio = { id: videoId, name: title, type: 'youtube' };
+                setSavedAudios([...savedAudios, newAudio]);
+                onSelect(videoId);
+                onClose();
+                setYoutubeUrl('');
+                alert("Playlist detected! Added the specific video. Note: Full playlist imports require a YouTube API Key.");
+            } else {
+                // Just a playlist URL
+                alert("Playlist detected! Please open the playlist and add specific video URLs one by one.");
+            }
+            return;
+        }
+
+        // 2. Check for Direct Video
+        const videoId = AudioUtils.extractVideoID(url);
         if (videoId) {
             const title = await AudioUtils.fetchYouTubeTitle(videoId);
             const newAudio = { id: videoId, name: title, type: 'youtube' };
