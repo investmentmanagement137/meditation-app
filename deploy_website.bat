@@ -3,6 +3,12 @@ echo ==========================================
 echo      Deploying to GitHub Pages...
 echo ==========================================
 
+:: 0. Commit any pending changes (Fixes)
+echo [0/4] Committing changes...
+git add .
+git commit -m "Auto-commit from deploy script"
+:: Ignore commit errors (e.g. nothing to commit)
+
 :: 1. Build the project
 echo [1/4] Building project...
 call npm run build
