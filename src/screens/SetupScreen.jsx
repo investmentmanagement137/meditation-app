@@ -77,7 +77,7 @@ const SetupScreen = ({
             {/* Bottom Controls */}
             <div style={{
                 position: 'absolute',
-                bottom: '40px',
+                bottom: 'calc(40px + env(safe-area-inset-bottom))',
                 left: '0',
                 width: '100%',
                 display: 'flex',
@@ -85,11 +85,11 @@ const SetupScreen = ({
                 alignItems: 'center',
                 gap: '12px',
                 padding: '0 20px',
-                boxSizing: 'border-box'
+                pointerEvents: 'none' // Let clicks pass through if empty areas
             }}>
-                <button className="btn-primary btn-begin" onClick={handleStart} style={{ width: '100%', maxWidth: '400px' }}>Begin Session</button>
-                <button className="log-btn" onClick={openLogs}>
-                    <span>Logs</span>
+                <button className="btn-primary btn-begin" onClick={handleStart} style={{ width: '100%', maxWidth: '400px', pointerEvents: 'auto' }}>Begin Session</button>
+                <button className="log-btn" onClick={openLogs} style={{ pointerEvents: 'auto', position: 'relative', top: '0', right: '0', alignSelf: 'center', background: 'transparent', textDecoration: 'underline' }}>
+                    <span>View Logs</span>
                 </button>
             </div>
         </div>

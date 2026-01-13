@@ -50,7 +50,11 @@ body {
     max-width: 600px;
     margin: 0 auto;
     height: 100vh;
+    height: 100dvh;
+    /* Mobile viewport fix */
     position: relative;
+    padding-bottom: env(safe-area-inset-bottom);
+    /* iOS Safe Area */
 }
 
 .screen-content {

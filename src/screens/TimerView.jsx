@@ -156,7 +156,7 @@ const TimerScreen = ({ sessionConfig, onEndSession }) => {
             {/* Controls moved to bottom */}
             <div className="timer-controls" style={{
                 position: 'absolute',
-                bottom: '50px',
+                bottom: 'calc(50px + env(safe-area-inset-bottom))',
                 width: '100%',
                 maxWidth: '300px',
                 display: 'flex',
