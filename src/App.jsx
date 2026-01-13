@@ -9,6 +9,16 @@ import LogModal from './modals/LogModal';
 import useLocalStorage from './hooks/useLocalStorage';
 
 function App() {
+  // Load YouTube API Globally on Mount
+  React.useEffect(() => {
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+  }, []);
+
   const [currentScreen, setCurrentScreen] = useState('setup');
   const [sessionData, setSessionData] = useState({});
   const [isEndNoteOpen, setIsEndNoteOpen] = useState(false);

@@ -37,30 +37,18 @@ export function useAudio() {
     const ytPlayerRef = useRef(null);
     const audioContextRef = useRef(null);
 
-    // Load API on Mount
-    useEffect(() => {
-        if (!window.YT) {
-            const tag = document.createElement('script');
-            tag.src = "https://www.youtube.com/iframe_api";
-            const firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        }
-    }, []);
+    // Note: API is now loaded in App.jsx globally.
+    // We remove the local loader here to avoid redundant checks/race conditions.
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
             stopAudio();
             // Clean up YouTube Player DOM
-            // This prevents conflicts if the component is remounted
             const hostDiv = document.getElementById('yt-player-host');
             if (hostDiv) {
-                // If the player replaced the div with an iframe, removing hostDiv removes the player.
-                // We should also look for iframes that might have taken over the ID.
                 hostDiv.remove();
             }
-
-            // Also nullify ref
             ytPlayerRef.current = null;
         };
     }, []);
@@ -75,31 +63,38 @@ export function useAudio() {
     };
 
     const loadYouTubePlayer = (videoId, attempt = 0) => {
-        if (attempt > 10) {
-            console.error("YouTube API failed to load");
+        if (attempt > 20) { // Increased attempts since we rely on App.jsx
+            console.error("YouTube API failed to load (Timeout)");
             return;
         }
 
         if (!window.YT || !window.YT.Player) {
-            setTimeout(() => loadYouTubePlayer(videoId, attempt + 1), 500);
+            // Wait for App.jsx loader to finish
+            setTimeout(() => loadYouTubePlayer(videoId, attempt + 1), 200);
             return;
         }
 
         // Host Div Check
-        // Since we remove it on unmount, we always create it fresh if missing
         let playerDiv = document.getElementById('yt-player-host');
         if (!playerDiv) {
             playerDiv = document.createElement('div');
             playerDiv.id = 'yt-player-host';
+            // VISIBILITY FIX:
+            // Use opacity:0 and pointer-events:none.
+            // Avoid display:none or off-screen (-9999px) which browsers hinder.
             playerDiv.style.position = 'absolute';
-            playerDiv.style.top = '-9999px';
-            playerDiv.style.left = '-9999px';
+            playerDiv.style.top = '0';
+            playerDiv.style.left = '0';
+            playerDiv.style.width = '1px';
+            playerDiv.style.height = '1px';
+            playerDiv.style.opacity = '0.01'; // Not fully 0 just in case
+            playerDiv.style.pointerEvents = 'none';
+            playerDiv.style.zIndex = '-1';
             document.body.appendChild(playerDiv);
         }
 
         // DOM verification
         if (typeof ytPlayerRef.current?.loadVideoById === 'function') {
-            // If ref claims to be valid, verify it's still in document
             const iframe = ytPlayerRef.current.getIframe();
             if (iframe && document.body.contains(iframe)) {
                 ytPlayerRef.current.loadVideoById(videoId);
@@ -111,8 +106,8 @@ export function useAudio() {
         // Create New Player
         try {
             ytPlayerRef.current = new window.YT.Player('yt-player-host', {
-                height: '0',
-                width: '0',
+                height: '100%', // Fill the tiny container
+                width: '100%',
                 videoId: videoId,
                 playerVars: {
                     'playsinline': 1,
@@ -122,10 +117,19 @@ export function useAudio() {
                 },
                 events: {
                     'onReady': (event) => {
+                        console.log("YT Player Ready");
                         event.target.setVolume(30);
                         event.target.playVideo();
+                        // Verify state
+                        setTimeout(() => {
+                            if (event.target.getPlayerState && event.target.getPlayerState() !== 1) {
+                                console.warn("YT Autoplay might be blocked. Forcing play.");
+                                event.target.playVideo();
+                            }
+                        }, 1000);
                     },
                     'onStateChange': (event) => {
+                        console.log("YT State Change:", event.data);
                         if (event.data === window.YT.PlayerState.ENDED) {
                             event.target.playVideo();
                         }
