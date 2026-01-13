@@ -190,8 +190,12 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
 
             {/* Controls */}
             <div className="timer-controls-wrapper">
-                <button className="control-btn" onClick={toggleTimer}>{isPaused ? '▶' : '⏸'} </button>
-                <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>⏹</button>
+                <button className="control-btn" onClick={toggleTimer}>
+                    <span className="control-icon-box">{isPaused ? '▶' : '⏸'}</span>
+                </button>
+                <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>
+                    <span className="control-icon-box">⏹</span>
+                </button>
             </div>
         </div>
     );
