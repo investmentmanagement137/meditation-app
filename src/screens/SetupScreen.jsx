@@ -70,6 +70,12 @@ const SetupScreen = ({
                         placeholder="What is your intention for this session?"
                         value={startNote}
                         onChange={(e) => setStartNote(e.target.value)}
+                        onFocus={(e) => {
+                            // Delay slightly to allow keyboard to appear
+                            setTimeout(() => {
+                                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 300);
+                        }}
                     ></textarea>
                 </div>
             </div>
