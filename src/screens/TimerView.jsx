@@ -12,7 +12,7 @@ const DEFAULT_QUOTES = [
     { text: "The present moment is filled with joy and happiness.", author: "Thich Nhat Hanh" }
 ];
 
-const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAudioSettings }) => {
+const TimerScreen = ({ sessionConfig, activeAudioId, onEndSession, setSessionAnalysis, onOpenAudioSettings }) => {
     // Logging for debug
     useEffect(() => {
         console.log("TimerScreen Mounted");
@@ -111,17 +111,9 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
     const [savedAudios] = useLocalStorage('meditation_audios', []);
 
     useEffect(() => {
-        // Start Sequence
+        // Start Sequence (Bells & Timer only)
         playBell('start');
         startTimer();
-
-        if (audioId) {
-            const track = savedAudios.find(a => a.id === audioId);
-            if (track) {
-                console.log("Playing Audio:", track.name);
-                playAudio(track);
-            }
-        }
 
         return () => {
             console.log("Cleaning up TimerScreen session");
@@ -129,6 +121,25 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
             stopTimer();
         };
     }, []);
+
+    // Reactive Audio Handling
+    useEffect(() => {
+        // Use activeAudioId if provided (live switching), otherwise session config fallback
+        const targetAudioId = activeAudioId !== undefined ? activeAudioId : audioId;
+
+        if (targetAudioId && targetAudioId !== '1') { // '1' is None
+            const track = savedAudios.find(a => a.id === targetAudioId);
+            if (track) {
+                console.log("Playing Audio:", track.name);
+                playAudio(track);
+            } else {
+                stopAudio(); // Track not found
+            }
+        } else {
+            console.log("Stopping Audio (None selected)");
+            stopAudio();
+        }
+    }, [activeAudioId, audioId, savedAudios]);
 
     useEffect(() => {
         if (isPaused) pauseAudio();

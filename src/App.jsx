@@ -177,6 +177,7 @@ function App() {
         {currentScreen === 'timer' && (
           <TimerScreen
             sessionConfig={sessionData}
+            activeAudioId={selectedAudioId}
             onEndSession={handleEndSession}
             setSessionAnalysis={setSessionAnalysis}
             onOpenAudioSettings={() => setIsAudioModalOpen(true)}
