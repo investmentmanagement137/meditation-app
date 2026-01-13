@@ -12,6 +12,9 @@ function App() {
   // Load YouTube API Globally on Mount
   React.useEffect(() => {
     if (!window.YT) {
+      window.onYouTubeIframeAPIReady = () => {
+        console.log("Global: YouTube API Ready");
+      };
       const tag = document.createElement('script');
       tag.src = "https://www.youtube.com/iframe_api";
       const firstScriptTag = document.getElementsByTagName('script')[0];
