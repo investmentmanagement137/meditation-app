@@ -239,6 +239,29 @@ h2 {
     transform: translateY(0);
 }
 
+/* Icon Button (Log, Settings, etc) */
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+}
+
+.icon-btn:hover {
+    background-color: var(--surface-hover);
+    transform: scale(1.1);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
 /* Begin Button Pulse Animation */
 @keyframes pulse {
     0% {

@@ -156,8 +156,8 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
                 </div>
             </div>
 
-            {/* Digital Clock - Moved below ring */}
-            <div className="digital-clock" style={{ fontSize: '64px', marginTop: '40px', lineHeight: 1, fontWeight: 300, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+            {/* Digital Clock - Moved below ring. Reduced weight to fix "extrabolt" look. */}
+            <div className="digital-clock" style={{ fontSize: '64px', marginTop: '40px', lineHeight: 1, fontWeight: 200, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                 {m}:{s}
             </div>
 

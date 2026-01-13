@@ -43,8 +43,8 @@ const SetupScreen = ({
         <div className="screen-content">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '40px' }}>
                 <h1 style={{ margin: 0 }}>Meditation Timer</h1>
-                <button className="log-btn" onClick={openLogs} style={{ background: 'transparent', width: 'auto', padding: '8px' }}>
-                    <span style={{ fontSize: '24px' }}>📜</span>
+                <button className="icon-btn" onClick={openLogs} title="View Logs">
+                    <span style={{ fontSize: '24px', lineHeight: 1 }}>📜</span>
                 </button>
             </div>
 
