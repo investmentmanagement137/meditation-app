@@ -3,8 +3,6 @@ import BaseModal from '../components/BaseModal';
 import { AudioUtils } from '../hooks/useAudio';
 
 const DEFAULT_AUDIOS = [
-    { id: '433600551', name: 'Rain', type: 'direct', url: 'https://cdn.pixabay.com/download/audio/2023/06/25/audio_433600551.mp3' },
-    { id: '11030', name: 'Forest', type: 'direct', url: 'https://cdn.pixabay.com/download/audio/2022/02/07/audio_11030.mp3' },
     { id: '1', name: 'None', type: 'none' }
 ];
 

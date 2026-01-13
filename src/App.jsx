@@ -97,10 +97,9 @@ function App() {
   const [durations, setDurations] = useLocalStorage('meditation_durations', [5, 10, 15, 20]);
   const [customIntervals, setCustomIntervals] = useLocalStorage('custom_intervals', []);
   const [savedAudios, setSavedAudios] = useLocalStorage('meditation_audios', [
-    { id: '433600551', name: 'Rain', type: 'direct', url: 'https://cdn.pixabay.com/download/audio/2023/06/25/audio_433600551.mp3' },
-    { id: '11030', name: 'Forest', type: 'direct', url: 'https://cdn.pixabay.com/download/audio/2022/02/07/audio_11030.mp3' },
     { id: '1', name: 'None', type: 'none' }
   ]);
+  const [logs, setLogs] = useLocalStorage('meditation_sessions', []);
 
   const [selectedDuration, setSelectedDuration] = useLocalStorage('selected_duration', 10);
   const [selectedInterval, setSelectedInterval] = useLocalStorage('selected_interval', '0');
@@ -139,11 +138,14 @@ function App() {
       model: sessionAnalysis?.model || null,
       tokens: sessionAnalysis?.usage?.totalTokenCount || null
     };
-    const savedLogs = JSON.parse(localStorage.getItem('meditation_sessions') || '[]');
-    savedLogs.push(log);
-    localStorage.setItem('meditation_sessions', JSON.stringify(savedLogs));
+
+    setLogs(prev => [...prev, log]);
     setSessionAnalysis(null); // Reset for next session
     setCurrentScreen('setup');
+  };
+
+  const handleDeleteLog = (logId) => {
+    setLogs(prev => prev.filter(l => l.id !== logId));
   };
 
   return (
@@ -212,7 +214,8 @@ function App() {
       <LogModal
         isOpen={isLogModalOpen}
         onClose={() => setIsLogModalOpen(false)}
-        logs={JSON.parse(localStorage.getItem('meditation_sessions') || '[]')}
+        logs={logs}
+        onDeleteLog={handleDeleteLog}
       />
     </div>
   );

@@ -2,13 +2,7 @@ import React, { useState } from 'react';
 import BaseModal from '../components/BaseModal';
 import useLocalStorage from '../hooks/useLocalStorage';
 
-const LogModal = ({ isOpen, onClose, logs: propLogs }) => {
-    const [localLogs, setLocalLogs] = useLocalStorage('meditation_sessions', []);
-    // Use propLogs if provided (from App refresh), otherwise fall back to local hook
-    // Actually, to ensure refresh, we should rely on the prop if passed, or force re-read.
-    // The issue is App.jsx adds to localStorage, but this hook might not update if it's not listening to storage events from same window.
-    // Best fix: App.jsx passes current logs.
-    const logs = propLogs || localLogs;
+const LogModal = ({ isOpen, onClose, logs, onDeleteLog }) => {
 
     const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
     const [isEditingKey, setIsEditingKey] = useState(false);
@@ -23,11 +17,7 @@ const LogModal = ({ isOpen, onClose, logs: propLogs }) => {
         setIsEditingKey(false);
     };
 
-    const handleDeleteLog = (logId) => {
-        if (confirm('Delete this session?')) {
-            setLogs(logs.filter(log => log.id !== logId));
-        }
-    };
+
 
     const reversedLogs = [...logs].reverse();
 
@@ -65,6 +55,15 @@ const LogModal = ({ isOpen, onClose, logs: propLogs }) => {
         a.download = `meditation_log_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    const [logToDelete, setLogToDelete] = useState(null);
+
+    const confirmDelete = () => {
+        if (logToDelete) {
+            onDeleteLog(logToDelete);
+            setLogToDelete(null);
+        }
     };
 
     return (
@@ -106,54 +105,102 @@ const LogModal = ({ isOpen, onClose, logs: propLogs }) => {
                 </button>
             </div>
 
-            <div style={{ overflowY: 'auto', maxHeight: '55vh' }}>
+            <div style={{ overflowY: 'auto', maxHeight: '55vh', position: 'relative' }}>
+                {/* Delete Confirmation Overlay */}
+                {logToDelete && (
+                    <div style={{
+                        position: 'fixed', // Fixed relative to viewport to ensure visibility on top of everything
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        zIndex: 100,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }} onClick={(e) => { e.stopPropagation(); setLogToDelete(null); }}>
+                        <div style={{
+                            background: '#1a1a2e', // Solid background (no transparency)
+                            padding: '24px',
+                            borderRadius: '16px',
+                            width: '300px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+                            border: '1px solid var(--border-color)'
+                        }} onClick={(e) => e.stopPropagation()}>
+                            <h3 style={{ marginTop: 0, marginBottom: '12px' }}>Delete Session?</h3>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>This action cannot be undone.</p>
+                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                                <button onClick={() => setLogToDelete(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--text-secondary)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
+                                <button className="btn-primary" onClick={confirmDelete} style={{ padding: '10px 20px', background: '#FF5252' }}>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {reversedLogs.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No sessions yet.</p>
                 ) : (
-                    reversedLogs.map(log => (
-                        <div key={log.id} className="log-item">
-                            <div className="log-item-header">
-                                <span>{new Date(log.startTime).toLocaleDateString()}</span>
-                                <span className="delete-btn" onClick={() => handleDeleteLog(log.id)} style={{ cursor: 'pointer' }}>✕</span>
+                    reversedLogs.map(log => {
+                        const startDate = new Date(log.startTime);
+                        const endDate = log.endTime ? new Date(log.endTime) : null;
+                        const durationSec = endDate ? Math.round((endDate - startDate) / 1000) : 0;
+                        const m = Math.floor(durationSec / 60);
+                        const s = durationSec % 60;
+
+                        return (
+                            <div key={log.id} className="log-item" style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
+                                {/* Header: Date | Cross */}
+                                <div className="log-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <span style={{ fontWeight: 600 }}>Date: {startDate.toLocaleDateString()}</span>
+                                    <span
+                                        className="delete-btn"
+                                        onClick={() => setLogToDelete(log.id)}
+                                        style={{ cursor: 'pointer', padding: '4px' }}
+                                    >
+                                        ✕
+                                    </span>
+                                </div>
+
+                                {/* Body - Requested Layout */}
+                                <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-primary)' }}>
+                                    {/* Line 1: Setup & Duration */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <div><span style={{ color: 'var(--text-secondary)' }}>Setup:</span> {log.duration} min</div>
+                                        <div><span style={{ color: 'var(--text-secondary)' }}>Duration:</span> {m}m {s}s (actual)</div>
+                                    </div>
+
+                                    {/* Line 2: Start & End */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                                        <div><span style={{ color: 'var(--text-secondary)' }}>Start:</span> {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                        <div><span style={{ color: 'var(--text-secondary)' }}>End:</span> {endDate ? endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
+                                    </div>
+                                </div>
+
+                                {/* Notes */}
+                                {log.startNote && (
+                                    <div style={{ marginTop: '8px', fontSize: '13px', fontStyle: 'italic', color: 'var(--text-secondary)' }}>
+                                        "{log.startNote}"
+                                    </div>
+                                )}
+                                {log.endNote && (
+                                    <div style={{ marginTop: '4px', fontSize: '13px' }}>
+                                        {log.endNote}
+                                    </div>
+                                )}
+
+                                {/* AI Tags */}
+                                {((log.emotions && log.emotions.length > 0) || (log.causes && log.causes.length > 0)) && (
+                                    <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {log.emotions && log.emotions.map((e, i) => (
+                                            <span key={`e-${i}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(92, 107, 192, 0.2)', color: 'var(--primary)' }}>{e}</span>
+                                        ))}
+                                        {log.causes && log.causes.map((c, i) => (
+                                            <span key={`c-${i}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(255, 152, 0, 0.2)', color: '#FF9800' }}>{c}</span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', margin: '8px 0', fontSize: '13px' }}>
-                                <div><span style={{ color: 'var(--text-secondary)' }}>Duration:</span> {log.duration} min</div>
-                                <div><span style={{ color: 'var(--text-secondary)' }}>Start:</span> {new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                            </div>
-
-                            {log.model && log.tokens && (
-                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                                    AI: {log.model} • {log.tokens} tokens
-                                </div>
-                            )}
-
-                            {log.startNote && (
-                                <div className="log-item-note">
-                                    <div className="log-item-note-label">Before</div>
-                                    {log.startNote}
-                                </div>
-                            )}
-
-                            {log.endNote && (
-                                <div className="log-item-note">
-                                    <div className="log-item-note-label">After</div>
-                                    {log.endNote}
-                                </div>
-                            )}
-
-                            {/* Emotion and Cause Tags */}
-                            {((log.emotions && log.emotions.length) || (log.causes && log.causes.length)) && (
-                                <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                    {log.emotions && log.emotions.map((e, i) => (
-                                        <span key={`e-${i}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(92, 107, 192, 0.2)', color: 'var(--primary)' }}>{e}</span>
-                                    ))}
-                                    {log.causes && log.causes.map((c, i) => (
-                                        <span key={`c-${i}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(255, 152, 0, 0.2)', color: '#FF9800' }}>{c}</span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </BaseModal>
