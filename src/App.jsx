@@ -110,7 +110,8 @@ function App() {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen denied:', e));
     }
-    setSessionData(data);
+    // Add startTime when session begins
+    setSessionData({ ...data, startTime: new Date().toISOString() });
     setCurrentScreen('timer');
   };
 
@@ -121,11 +122,27 @@ function App() {
     setIsEndNoteOpen(true);
   };
 
+  // Session Gemini Analysis Results (populated by TimerView)
+  const [sessionAnalysis, setSessionAnalysis] = useState(null);
+
   const handleSaveEndNote = (endNote) => {
-    const log = { id: Date.now(), startTime: new Date().toISOString(), duration: sessionData.duration, startNote: sessionData.note, endNote };
+    // Build complete log entry matching legacy structure
+    const log = {
+      id: Date.now(),
+      startTime: sessionData.startTime || new Date().toISOString(),
+      endTime: new Date().toISOString(),
+      duration: sessionData.duration,
+      startNote: sessionData.note || null,
+      endNote: endNote || null,
+      emotions: sessionAnalysis?.emotions || [],
+      causes: sessionAnalysis?.causes || [],
+      model: sessionAnalysis?.model || null,
+      tokens: sessionAnalysis?.usage?.totalTokenCount || null
+    };
     const savedLogs = JSON.parse(localStorage.getItem('meditation_sessions') || '[]');
     savedLogs.push(log);
     localStorage.setItem('meditation_sessions', JSON.stringify(savedLogs));
+    setSessionAnalysis(null); // Reset for next session
     setCurrentScreen('setup');
   };
 
@@ -154,6 +171,7 @@ function App() {
         <TimerScreen
           sessionConfig={sessionData}
           onEndSession={handleEndSession}
+          setSessionAnalysis={setSessionAnalysis}
         />
       )}
 

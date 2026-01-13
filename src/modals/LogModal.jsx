@@ -3,13 +3,11 @@ import BaseModal from '../components/BaseModal';
 import useLocalStorage from '../hooks/useLocalStorage';
 
 const LogModal = ({ isOpen, onClose }) => {
-    const [logs] = useLocalStorage('meditation_sessions', []);
+    const [logs, setLogs] = useLocalStorage('meditation_sessions', []);
     const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
     const [isEditingKey, setIsEditingKey] = useState(false);
-    // Use local state for the input field to avoid jitter
     const [tempKey, setTempKey] = useState('');
 
-    // Update temp key when entering edit mode or when apiKey changes
     React.useEffect(() => {
         if (apiKey) setTempKey(apiKey);
     }, [apiKey]);
@@ -19,26 +17,48 @@ const LogModal = ({ isOpen, onClose }) => {
         setIsEditingKey(false);
     };
 
+    const handleDeleteLog = (logId) => {
+        if (confirm('Delete this session?')) {
+            setLogs(logs.filter(log => log.id !== logId));
+        }
+    };
+
     const reversedLogs = [...logs].reverse();
 
+    // Enhanced CSV Export matching legacy
     const downloadCSV = () => {
-        const headers = ["Date", "Duration", "Start Note", "End Note"];
-        const rows = reversedLogs.map(log => [
-            new Date(log.startTime).toLocaleString(),
-            log.duration + " min",
-            `"${(log.startNote || '').replace(/"/g, '""')}"`,
-            `"${(log.endNote || '').replace(/"/g, '""')}"`
-        ]);
+        if (logs.length === 0) {
+            alert('No sessions to export');
+            return;
+        }
 
-        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
+        const headers = ['Date', 'Start Time', 'End Time', 'Duration (min)', 'Before Note', 'After Note', 'Emotions', 'Causes', 'AI Model', 'Token Usage'];
+        const rows = logs.map(log => {
+            const startDate = new Date(log.startTime);
+            const endDate = log.endTime ? new Date(log.endTime) : null;
+            return [
+                startDate.toLocaleDateString(),
+                startDate.toLocaleTimeString(),
+                endDate ? endDate.toLocaleTimeString() : 'Incomplete',
+                log.duration,
+                `"${(log.startNote || '').replace(/"/g, '""')}"`,
+                `"${(log.endNote || '').replace(/"/g, '""')}"`,
+                `"${(log.emotions || []).join(', ')}"`,
+                `"${(log.causes || []).join(', ')}"`,
+                log.model || '',
+                log.tokens || ''
+            ].join(',');
+        });
+
+        const csv = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "meditation_logs.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `meditation_log_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -48,7 +68,6 @@ const LogModal = ({ isOpen, onClose }) => {
             <div style={{ margin: '0 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                 <div className="api-settings" style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
                     {apiKey && !isEditingKey ? (
-                        // View Mode
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(76, 175, 80, 0.1)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
                             <span style={{ fontSize: '13px', color: '#4CAF50', fontWeight: 500 }}>API Key Saved ✓</span>
                             <button
@@ -59,11 +78,9 @@ const LogModal = ({ isOpen, onClose }) => {
                             </button>
                         </div>
                     ) : (
-                        // Edit Mode
                         <>
                             <input
                                 type="password"
-                                className="api-input"
                                 placeholder="Gemini API Key..."
                                 style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--text-secondary)', background: 'var(--background)', color: 'var(--text-primary)' }}
                                 value={tempKey}
@@ -91,21 +108,42 @@ const LogModal = ({ isOpen, onClose }) => {
                         <div key={log.id} className="log-item">
                             <div className="log-item-header">
                                 <span>{new Date(log.startTime).toLocaleDateString()}</span>
-                                <span>{new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                <span className="delete-btn" onClick={() => handleDeleteLog(log.id)} style={{ cursor: 'pointer' }}>✕</span>
                             </div>
-                            <div className="log-item-duration">{log.duration} min</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', margin: '8px 0', fontSize: '13px' }}>
+                                <div><span style={{ color: 'var(--text-secondary)' }}>Duration:</span> {log.duration} min</div>
+                                <div><span style={{ color: 'var(--text-secondary)' }}>Start:</span> {new Date(log.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                            </div>
+
+                            {log.model && log.tokens && (
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                    AI: {log.model} • {log.tokens} tokens
+                                </div>
+                            )}
 
                             {log.startNote && (
                                 <div className="log-item-note">
-                                    <div className="log-item-note-label">Intention</div>
+                                    <div className="log-item-note-label">Before</div>
                                     {log.startNote}
                                 </div>
                             )}
 
                             {log.endNote && (
                                 <div className="log-item-note">
-                                    <div className="log-item-note-label">Reflection</div>
+                                    <div className="log-item-note-label">After</div>
                                     {log.endNote}
+                                </div>
+                            )}
+
+                            {/* Emotion and Cause Tags */}
+                            {((log.emotions && log.emotions.length) || (log.causes && log.causes.length)) && (
+                                <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                    {log.emotions && log.emotions.map((e, i) => (
+                                        <span key={`e-${i}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(92, 107, 192, 0.2)', color: 'var(--primary)' }}>{e}</span>
+                                    ))}
+                                    {log.causes && log.causes.map((c, i) => (
+                                        <span key={`c-${i}`} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(255, 152, 0, 0.2)', color: '#FF9800' }}>{c}</span>
+                                    ))}
                                 </div>
                             )}
                         </div>

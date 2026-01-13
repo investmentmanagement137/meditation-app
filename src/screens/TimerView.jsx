@@ -12,7 +12,7 @@ const DEFAULT_QUOTES = [
     { text: "The present moment is filled with joy and happiness.", author: "Thich Nhat Hanh" }
 ];
 
-const TimerScreen = ({ sessionConfig, onEndSession }) => {
+const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
     // Logging for debug
     useEffect(() => {
         console.log("TimerScreen Mounted");
@@ -103,9 +103,18 @@ const TimerScreen = ({ sessionConfig, onEndSession }) => {
 
     useEffect(() => {
         if (note && geminiApiKey) {
-            getMotivationalContent(note, geminiApiKey).catch(err => console.log("Gemini Error", err)).then(res => {
-                if (res) setQuotes(prev => [{ text: res.quote, author: res.support }, ...prev]);
-            });
+            getMotivationalContent(note, geminiApiKey)
+                .then(res => {
+                    if (res) {
+                        // Update quotes for carousel
+                        setQuotes(prev => [{ text: res.quote, author: res.support }, ...prev]);
+                        // Store analysis for logging
+                        if (setSessionAnalysis) {
+                            setSessionAnalysis(res);
+                        }
+                    }
+                })
+                .catch(err => console.log("Gemini Error", err));
         }
     }, [note, geminiApiKey]);
 
