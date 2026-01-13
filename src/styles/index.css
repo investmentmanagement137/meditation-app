@@ -243,8 +243,10 @@ h2 {
 
 .timer-ring-wrapper {
     position: relative;
-    width: 320px;
-    height: 320px;
+    width: 100%;
+    max-width: 380px;
+    height: auto;
+    aspect-ratio: 340/440;
     display: flex;
     justify-content: center;
     align-items: center;
