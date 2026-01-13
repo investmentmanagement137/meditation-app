@@ -21,18 +21,26 @@ const TimerRing = ({ totalSeconds, remainingSeconds }) => {
     }, [remainingSeconds, totalSeconds]);
 
     // Dimensions: 300x400 (x=20, y=20), Radius 32.
-    // Center Top: 170, 20.
-    // Right Path: Line to (288, 20), Arc to (320, 52), Line to (320, 388), Arc to (288, 420), Line to (170, 420).
-    const rightPath = "M 170 20 L 288 20 A 32 32 0 0 1 320 52 L 320 388 A 32 32 0 0 1 288 420 L 170 420";
+    // Reversed Paths: Start at Bottom Center (170, 420), End at Top Center (170, 20).
+    // Depletion (offset increasing) hides the END first. So Top disappears first. gap grows at top.
 
-    // Left Path: Line to (52, 20), Arc to (20, 52), Line to (20, 388), Arc to (52, 420), Line to (170, 420).
-    const leftPath = "M 170 20 L 52 20 A 32 32 0 0 0 20 52 L 20 388 A 32 32 0 0 0 52 420 L 170 420";
+    // Right Path (Climbing up the right side):
+    // Start (170, 420) -> Line to (288, 420) -> Arc to (320, 388) -> Line to (320, 52) -> Arc to (288, 20) -> Line to (170, 20).
+    // Arcs are CCW (0 sweep) relative to center.
+    const rightPath = "M 170 420 L 288 420 A 32 32 0 0 0 320 388 L 320 52 A 32 32 0 0 0 288 20 L 170 20";
+
+    // Left Path (Climbing up the left side):
+    // Start (170, 420) -> Line to (52, 420) -> Arc to (20, 388) -> Line to (20, 52) -> Arc to (52, 20) -> Line to (170, 20).
+    // Arcs are CW (1 sweep) relative to center?
+    // (52, 420) -> (20, 388). Moving Left then Up. Clockwise turn.
+    const leftPath = "M 170 420 L 52 420 A 32 32 0 0 1 20 388 L 20 52 A 32 32 0 0 1 52 20 L 170 20";
 
     return (
         <svg className="timer-ring" viewBox="0 0 340 440" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
             <defs>
+                {/* Tighter outer shadow */}
                 <filter id="glow-shadow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="rgba(255, 255, 255, 0.3)" />
+                    <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(0, 0, 0, 0.4)" />
                 </filter>
             </defs>
 
