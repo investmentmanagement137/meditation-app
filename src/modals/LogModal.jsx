@@ -218,13 +218,13 @@ const LogModal = ({ isOpen, onClose, logs, onDeleteLog }) => {
 
                                 {/* Notes */}
                                 {log.startNote && (
-                                    <div style={{ marginTop: '8px', fontSize: '13px', fontStyle: 'italic', color: 'var(--text-secondary)' }}>
-                                        "{log.startNote}"
+                                    <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                        <span style={{ fontWeight: '600', marginRight: '4px' }}>Before:</span> "{log.startNote}"
                                     </div>
                                 )}
                                 {log.endNote && (
-                                    <div style={{ marginTop: '4px', fontSize: '13px' }}>
-                                        {log.endNote}
+                                    <div style={{ marginTop: '4px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                        <span style={{ fontWeight: '600', marginRight: '4px' }}>After:</span> "{log.endNote}"
                                     </div>
                                 )}
 
