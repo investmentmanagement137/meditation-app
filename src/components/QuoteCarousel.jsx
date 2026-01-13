@@ -32,7 +32,7 @@ const QuoteCarousel = ({ quotes }) => {
         if (quotes.length <= 1) return;
         const interval = setInterval(() => {
             nextSlide();
-        }, 6000); // 6 seconds
+        }, 15000); // 15 seconds
         return () => clearInterval(interval);
     }, [quotes.length, currentIndex]); // Reset on index change to avoid rapid skips
 

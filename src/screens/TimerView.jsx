@@ -192,8 +192,8 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
             getMotivationalContent(note, geminiApiKey)
                 .then(res => {
                     if (res) {
-                        // Update quotes for carousel
-                        setQuotes(prev => [{ text: res.quote, author: res.support }, ...prev]);
+                        // Replace quotes with AI-generated content (don't mix with defaults)
+                        setQuotes([{ text: res.quote, author: res.support }]);
                         // Store analysis for logging
                         if (setSessionAnalysis) {
                             setSessionAnalysis(res);
