@@ -27,6 +27,16 @@ const QuoteCarousel = ({ quotes }) => {
         setCurrentIndex((prev) => (prev - 1 + quotes.length) % quotes.length);
     };
 
+    // Auto Scroll
+    React.useEffect(() => {
+        if (quotes.length <= 1) return;
+        const interval = setInterval(() => {
+            nextSlide();
+        }, 6000); // 6 seconds
+        return () => clearInterval(interval);
+    }, [quotes.length, currentIndex]); // Reset on index change to avoid rapid skips
+
+
     if (quotes.length === 0) return null;
 
     return (

@@ -172,6 +172,7 @@ function App() {
           sessionConfig={sessionData}
           onEndSession={handleEndSession}
           setSessionAnalysis={setSessionAnalysis}
+          onOpenAudioSettings={() => setIsAudioModalOpen(true)}
         />
       )}
 

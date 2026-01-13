@@ -12,7 +12,7 @@ const DEFAULT_QUOTES = [
     { text: "The present moment is filled with joy and happiness.", author: "Thich Nhat Hanh" }
 ];
 
-const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
+const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAudioSettings }) => {
     // Logging for debug
     useEffect(() => {
         console.log("TimerScreen Mounted");
@@ -149,15 +149,27 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
                     padding: '40px', // Parsing padding to avoid hitting ring border
                     zIndex: 10
                 }}>
-                    {/* Quote Container */}
-                    <div style={{ width: '100%', marginBottom: '10px', height: 'auto', minHeight: '60px' }}>
+                    {/* Quote Container - Shifted up slightly to accommodate icon below */}
+                    <div style={{ width: '100%', marginBottom: '40px', height: 'auto', minHeight: '60px' }}>
                         <QuoteCarousel quotes={quotes} />
+                    </div>
+
+                    {/* Audio Icon (Bottom Center of Ring) */}
+                    <div style={{ position: 'absolute', bottom: '40px', zIndex: 20 }}>
+                        <button
+                            className="icon-btn"
+                            onClick={onOpenAudioSettings}
+                            style={{ background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px' }}
+                            title="Change Audio"
+                        >
+                            🎵
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Digital Clock - Moved below ring. Reduced weight to fix "extrabolt" look. */}
-            <div className="digital-clock" style={{ fontSize: '64px', marginTop: '40px', lineHeight: 1, fontWeight: 200, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+            {/* Digital Clock - Extra Bold as requested (like image) */}
+            <div className="digital-clock" style={{ fontSize: '80px', marginTop: '30px', lineHeight: 1, fontWeight: 800, letterSpacing: '-2px', color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
                 {m}:{s}
             </div>
 
