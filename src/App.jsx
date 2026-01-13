@@ -125,6 +125,9 @@ function App() {
   const [sessionAnalysis, setSessionAnalysis] = useState(null);
 
   const handleSaveEndNote = (endNote) => {
+    // End the session flow
+    setIsEndNoteOpen(false);
+
     // Build complete log entry matching legacy structure
     const log = {
       id: Date.now(),
@@ -183,7 +186,7 @@ function App() {
 
       <EndNoteModal
         isOpen={isEndNoteOpen}
-        onClose={() => setIsEndNoteOpen(false)}
+        onClose={() => handleSaveEndNote(null)} // Dismissing = Save with empty note
         onSave={handleSaveEndNote}
         initialNote=""
       />

@@ -6,7 +6,6 @@ const EndNoteModal = ({ isOpen, onClose, onSave, initialNote }) => {
 
     const handleSave = () => {
         onSave(note);
-        onClose();
     };
 
     return (
