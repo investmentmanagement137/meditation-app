@@ -21,9 +21,9 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         if (url.includes('list=')) {
             const videoId = AudioUtils.extractVideoID(url);
             if (videoId) {
-                const title = await AudioUtils.fetchYouTubeTitle(videoId);
+                const { title, creator } = await AudioUtils.fetchYouTubeTitle(videoId);
                 const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-                const newAudio = { id: videoId, name: title, type: 'youtube', thumbnail };
+                const newAudio = { id: videoId, name: title, creator, type: 'youtube', thumbnail };
                 setSavedAudios([...savedAudios, newAudio]);
                 onSelect(videoId);
                 onClose();
@@ -39,9 +39,9 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         // 2. Check for Direct Video (YouTube)
         const videoId = AudioUtils.extractVideoID(url);
         if (videoId) {
-            const title = await AudioUtils.fetchYouTubeTitle(videoId);
+            const { title, creator } = await AudioUtils.fetchYouTubeTitle(videoId);
             const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-            const newAudio = { id: videoId, name: title, type: 'youtube', thumbnail };
+            const newAudio = { id: videoId, name: title, creator, type: 'youtube', thumbnail };
             setSavedAudios([...savedAudios, newAudio]);
             onSelect(videoId);
             onClose();
@@ -114,25 +114,76 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                                 key={audio.id}
                                 className={`audio-item ${currentAudioId === audio.id ? 'selected' : ''}`}
                                 onClick={() => { onSelect(audio.id); onClose(); }}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '12px',
+                                    gap: '12px'
+                                }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    {/* Thumbnail or Icon */}
+                                {/* Left Content: Title & Creator */}
+                                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{
+                                        fontWeight: 500,
+                                        fontSize: '14px',
+                                        color: 'var(--text-primary)',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        textTransform: 'capitalize', // Sentence case approximation
+                                        lineHeight: '1.3'
+                                    }}>
+                                        {audio.name.toLowerCase()} {/* Force lowercase then capitalize via CSS/Format */}
+                                    </span>
+                                    <span style={{
+                                        fontSize: '12px',
+                                        color: 'var(--text-secondary)',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis'
+                                    }}>
+                                        {audio.creator || 'Unknown Artist'}
+                                    </span>
+                                </div>
+
+                                {/* Right Content: Thumbnail & Action */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                                    {/* Thumbnail */}
                                     {audio.thumbnail ? (
                                         <div style={{
-                                            width: '40px', height: '40px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0,
-                                            backgroundImage: `url(${audio.thumbnail})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#000'
+                                            width: '56px', height: '40px', // 16:9 aspect ratioish
+                                            borderRadius: '6px',
+                                            overflow: 'hidden',
+                                            backgroundImage: `url(${audio.thumbnail})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                            backgroundColor: '#000'
                                         }} />
                                     ) : (
-                                        <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                                        <div style={{
+                                            width: '40px', height: '40px',
+                                            borderRadius: '6px',
+                                            background: 'rgba(255,255,255,0.1)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '20px'
+                                        }}>
                                             {audio.type === 'youtube' ? '📺' : '🎵'}
                                         </div>
                                     )}
-                                    <span style={{ fontWeight: 500, fontSize: '14px' }}>{audio.name}</span>
+
+                                    {/* Delete Button */}
+                                    {audio.id !== '1' && !DEFAULT_AUDIOS.find(d => d.id === audio.id) && (
+                                        <span
+                                            className="delete-btn"
+                                            onClick={(e) => handleDeleteClick(audio.id, e)}
+                                            style={{ marginLeft: '4px' }}
+                                        >
+                                            &times;
+                                        </span>
+                                    )}
                                 </div>
-                                {audio.id !== '1' && !DEFAULT_AUDIOS.find(d => d.id === audio.id) && (
-                                    <span className="delete-btn" onClick={(e) => handleDeleteClick(audio.id, e)}>&times;</span>
-                                )}
                             </div>
                         ))}
                     </div>

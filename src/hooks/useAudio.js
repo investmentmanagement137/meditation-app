@@ -5,10 +5,13 @@ const fetchYouTubeTitle = async (videoId) => {
     try {
         const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
         const data = await response.json();
-        return data.title || 'YouTube Track';
+        return {
+            title: data.title || 'YouTube Track',
+            creator: data.author_name || 'Unknown Artist'
+        };
     } catch (error) {
         console.warn('Error fetching YT title:', error);
-        return 'YouTube Track';
+        return { title: 'YouTube Track', creator: 'Unknown Artist' };
     }
 };
 
