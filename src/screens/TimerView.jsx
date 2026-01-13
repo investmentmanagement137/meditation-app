@@ -175,5 +175,6 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis }) => {
                 <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>⏹</button>
             </div>
         </div>
+    );
 };
 export default TimerScreen;
