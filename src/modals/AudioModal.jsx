@@ -10,8 +10,8 @@ const DEFAULT_AUDIOS = [
 
 const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, setSavedAudios }) => {
     // No local hook here, dependent on App.jsx state
-    const [youtubeUrl, setYoutubeUrl] = useState('');
-    const [activeTab, setActiveTab] = useState('list'); // 'list' or 'add'
+    // View State: 'list' or 'add'
+    const [view, setView] = useState('list');
 
     const handleAddYouTube = async () => {
         // Robust handling similar to legacy code
@@ -22,13 +22,14 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         if (url.includes('list=')) {
             const videoId = AudioUtils.extractVideoID(url);
             if (videoId) {
-                // It's a playlist but has a video ID (e.g. watch?v=...&list=...)
+                // It's a playlist but has a video ID
                 const title = await AudioUtils.fetchYouTubeTitle(videoId);
                 const newAudio = { id: videoId, name: title, type: 'youtube' };
                 setSavedAudios([...savedAudios, newAudio]);
                 onSelect(videoId);
                 onClose();
                 setYoutubeUrl('');
+                setView('list');
                 alert("Playlist detected! Added the specific video. Note: Full playlist imports require a YouTube API Key.");
             } else {
                 // Just a playlist URL
@@ -46,6 +47,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
             onSelect(videoId);
             onClose();
             setYoutubeUrl('');
+            setView('list');
         } else {
             alert('Invalid YouTube URL');
         }
@@ -58,43 +60,81 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         }
     };
 
-    return (
-        <BaseModal isOpen={isOpen} onClose={onClose} title="Background Audio">
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                <button onClick={() => setActiveTab('list')} style={{ fontWeight: activeTab === 'list' ? 'bold' : 'normal' }}>My Audio</button>
-                <button onClick={() => setActiveTab('add')} style={{ fontWeight: activeTab === 'add' ? 'bold' : 'normal' }}>+ Add YouTube</button>
-            </div>
+    // Reset view on open
+    React.useEffect(() => {
+        if (isOpen) setView('list');
+    }, [isOpen]);
 
-            {activeTab === 'list' && (
-                <div className="audio-list">
-                    {savedAudios.map(audio => (
-                        <div
-                            key={audio.id}
-                            className={`audio-item ${currentAudioId === audio.id ? 'selected' : ''}`}
-                            onClick={() => { onSelect(audio.id); onClose(); }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span>{audio.type === 'youtube' ? '📺' : '🎵'}</span>
-                                <span style={{ fontWeight: 500 }}>{audio.name}</span>
+    return (
+        <BaseModal isOpen={isOpen} onClose={onClose} title={view === 'list' ? "Background Audio" : "Add New Audio"}>
+
+            {view === 'list' && (
+                <>
+                    <div className="audio-list" style={{ marginBottom: '16px' }}>
+                        {savedAudios.map(audio => (
+                            <div
+                                key={audio.id}
+                                className={`audio-item ${currentAudioId === audio.id ? 'selected' : ''}`}
+                                onClick={() => { onSelect(audio.id); onClose(); }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span>{audio.type === 'youtube' ? '📺' : '🎵'}</span>
+                                    <span style={{ fontWeight: 500 }}>{audio.name}</span>
+                                </div>
+                                {audio.id !== '1' && !DEFAULT_AUDIOS.find(d => d.id === audio.id) && (
+                                    <span className="delete-btn" onClick={(e) => handleDelete(audio.id, e)}>&times;</span>
+                                )}
                             </div>
-                            {audio.id !== '1' && !DEFAULT_AUDIOS.find(d => d.id === audio.id) && (
-                                <span className="delete-btn" onClick={(e) => handleDelete(audio.id, e)}>&times;</span>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={() => setView('add')}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            background: 'transparent',
+                            border: '1px dashed var(--text-secondary)',
+                            color: 'var(--text-primary)',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            fontSize: '14px'
+                        }}
+                    >
+                        <span>➕</span> Add New Track
+                    </button>
+                </>
             )}
 
-            {activeTab === 'add' && (
+            {view === 'add' && (
                 <div>
                     <input
                         className="input-field"
                         placeholder="Paste YouTube URL here..."
                         value={youtubeUrl}
                         onChange={(e) => setYoutubeUrl(e.target.value)}
+                        autoFocus
+                        style={{ marginBottom: '16px' }}
                     />
-                    <button className="btn-primary" onClick={handleAddYouTube} style={{ padding: '12px' }}>
+                    <button className="btn-primary" onClick={handleAddYouTube} style={{ padding: '12px', marginBottom: '12px' }}>
                         Add Track
+                    </button>
+                    <button
+                        onClick={() => setView('list')}
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--text-secondary)',
+                            width: '100%',
+                            cursor: 'pointer',
+                            padding: '8px'
+                        }}
+                    >
+                        Cancel
                     </button>
                 </div>
             )}
