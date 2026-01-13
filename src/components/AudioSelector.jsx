@@ -13,9 +13,17 @@ const AudioSelector = ({
                 </svg>
                 <span
                     id="selected-audio-name"
-                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '16px', fontWeight: '500', color: 'var(--text-primary)' }}
+                    style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        color: 'var(--text-primary)',
+                        textTransform: 'capitalize'
+                    }}
                 >
-                    {selectedAudio ? selectedAudio.name : 'None'}
+                    {(selectedAudio?.name || 'None').toLowerCase()}
                 </span>
             </div>
             <span style={{ color: 'var(--text-secondary)' }}>Change</span>
