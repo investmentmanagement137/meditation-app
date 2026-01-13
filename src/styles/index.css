@@ -417,7 +417,7 @@ h2 {
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 8px;
+    padding: 6px;
     border-radius: 50%;
     transition: all 0.2s ease;
     display: flex;
