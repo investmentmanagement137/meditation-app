@@ -3,11 +3,11 @@ echo ==========================================
 echo      Deploying to GitHub Pages...
 echo ==========================================
 
-:: 0. Commit any pending changes (Fixes)
-echo [0/4] Committing changes...
+:: 0. Commit and Push Source Code
+echo [0/4] Saving changes to GitHub...
 git add .
-git commit -m "Auto-commit from deploy script"
-:: Ignore commit errors (e.g. nothing to commit)
+git commit -m "Auto-save from deploy script"
+git push origin main
 
 :: 1. Build the project
 echo [1/4] Building project...
