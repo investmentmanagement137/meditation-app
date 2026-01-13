@@ -123,39 +123,20 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
     const totalSecs = (duration || 10) * 60;
 
     return (
-        <div className="screen-content timer-container" style={{ justifyContent: 'center' }}>
-            {/* 
-               Wrapper for relative positioning. 
-               TimerRing is 320x320. We make this wrapper same size or allow it to hug content.
-            */}
-            <div style={{ position: 'relative', width: '320px', height: '320px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div className="screen-content timer-container">
+            {/* Wrapper for relative positioning */}
+            <div className="timer-ring-wrapper">
                 <TimerRing totalSeconds={totalSecs} remainingSeconds={remainingSeconds} />
 
-                {/* 
-                   Content Overlay
-                   Positioned absolute to cover the ring area.
-                   Flexbox centers content internally.
-                */}
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '40px', // Parsing padding to avoid hitting ring border
-                    zIndex: 10
-                }}>
-                    {/* Quote Container - Shifted up slightly to accommodate icon below */}
+                {/* Content Overlay */}
+                <div className="timer-content-overlay">
+                    {/* Quote Container */}
                     <div style={{ width: '100%', marginBottom: '40px', height: 'auto', minHeight: '60px' }}>
                         <QuoteCarousel quotes={quotes} />
                     </div>
 
-                    {/* Audio Icon (Bottom Center of Ring) */}
-                    <div style={{ position: 'absolute', bottom: '40px', zIndex: 20 }}>
+                    {/* Audio Icon */}
+                    <div className="timer-audio-btn-wrapper">
                         <button
                             className="icon-btn"
                             onClick={onOpenAudioSettings}
@@ -168,21 +149,13 @@ const TimerScreen = ({ sessionConfig, onEndSession, setSessionAnalysis, onOpenAu
                 </div>
             </div>
 
-            {/* Digital Clock - Extra Bold as requested (like image) */}
-            <div className="digital-clock" style={{ fontSize: '80px', marginTop: '30px', lineHeight: 1, fontWeight: 800, letterSpacing: '-2px', color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+            {/* Digital Clock */}
+            <div className="timer-digital-clock">
                 {m}:{s}
             </div>
 
-            {/* Controls moved to bottom */}
-            <div className="timer-controls" style={{
-                position: 'absolute',
-                bottom: 'calc(50px + env(safe-area-inset-bottom))',
-                width: '100%',
-                maxWidth: '300px',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '20px'
-            }}>
+            {/* Controls */}
+            <div className="timer-controls-wrapper">
                 <button className="control-btn" onClick={toggleTimer}>{isPaused ? '▶' : '⏸'} </button>
                 <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>⏹</button>
             </div>

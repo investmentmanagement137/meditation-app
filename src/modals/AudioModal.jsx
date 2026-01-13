@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import BaseModal from '../components/BaseModal';
 import { AudioUtils } from '../hooks/useAudio';
+import ConfirmModal from '../components/ConfirmModal';
 
 const DEFAULT_AUDIOS = [
     { id: '1', name: 'None', type: 'none' }
@@ -74,10 +75,17 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         alert('Invalid URL. Please use a YouTube link or a direct audio file (mp3, wav, etc).');
     };
 
-    const handleDelete = (id, e) => {
+    const [audioToDelete, setAudioToDelete] = useState(null);
+
+    const handleDeleteClick = (id, e) => {
         e.stopPropagation();
-        if (confirm('Delete this track?')) {
-            setSavedAudios(savedAudios.filter(a => a.id !== id));
+        setAudioToDelete(id);
+    };
+
+    const confirmDelete = () => {
+        if (audioToDelete) {
+            setSavedAudios(savedAudios.filter(a => a.id !== audioToDelete));
+            setAudioToDelete(null);
         }
     };
 
@@ -86,8 +94,17 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         if (isOpen) setView('list');
     }, [isOpen]);
 
+
+
     return (
         <BaseModal isOpen={isOpen} onClose={onClose} title={view === 'list' ? "Background Audio" : "Add New Audio"}>
+            <ConfirmModal
+                isOpen={!!audioToDelete}
+                onClose={() => setAudioToDelete(null)}
+                onConfirm={confirmDelete}
+                title="Delete Audio?"
+                message="This audio track will be removed."
+            />
 
             {view === 'list' && (
                 <>
@@ -114,7 +131,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                                     <span style={{ fontWeight: 500, fontSize: '14px' }}>{audio.name}</span>
                                 </div>
                                 {audio.id !== '1' && !DEFAULT_AUDIOS.find(d => d.id === audio.id) && (
-                                    <span className="delete-btn" onClick={(e) => handleDelete(audio.id, e)}>&times;</span>
+                                    <span className="delete-btn" onClick={(e) => handleDeleteClick(audio.id, e)}>&times;</span>
                                 )}
                             </div>
                         ))}

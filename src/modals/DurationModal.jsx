@@ -7,18 +7,12 @@ const DurationModal = ({ isOpen, onClose, onSelect, durations, setDurations }) =
     const handleAdd = () => {
         const val = parseInt(customVal);
         if (val && val > 0 && !durations.includes(val)) {
-            const newDurations = [...durations, val].sort((a, b) => a - b);
-            // Limit to top 6?
+            // FIFO Queue Logic: Append new, remove oldest from front if > 6
+            let newDurations = [...durations, val];
             if (newDurations.length > 6) {
-                // Remove the one that is NOT the newly added one... usually oldest. 
-                // But simplified logic: remove first in sorted list (smallest)? Or remove a random one?
-                // The prompt for legacy said "most recent additions", but here we just have a list. 
-                // Let's stick to limiting size to avoid scrolling issues.
-                // Actually, legacy logic was "Most recent", meaning we need to know insertion order if we want to drop 'oldest'.
-                // For now, let's just shift (remove smallest).
-                // newDurations.shift(); 
-                // Wait, if I add 100, and shift, I remove 5. That's fine.
+                newDurations = newDurations.slice(newDurations.length - 6);
             }
+
             // For now, let's NOT limit strictly or we need a better data structure than just sorted numbers.
             // Just set it.
             setDurations(newDurations);

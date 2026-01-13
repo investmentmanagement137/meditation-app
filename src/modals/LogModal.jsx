@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import BaseModal from '../components/BaseModal';
+import ConfirmModal from '../components/ConfirmModal';
 import useLocalStorage from '../hooks/useLocalStorage';
 
 const LogModal = ({ isOpen, onClose, logs, onDeleteLog }) => {
@@ -105,39 +106,81 @@ const LogModal = ({ isOpen, onClose, logs, onDeleteLog }) => {
                 </button>
             </div>
 
-            <div style={{ overflowY: 'auto', maxHeight: '55vh', position: 'relative' }}>
-                {/* Delete Confirmation Overlay */}
-                {logToDelete && (
-                    <div style={{
-                        position: 'fixed', // Fixed relative to viewport to ensure visibility on top of everything
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        zIndex: 100,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }} onClick={(e) => { e.stopPropagation(); setLogToDelete(null); }}>
-                        <div style={{
-                            background: '#1a1a2e', // Solid background (no transparency)
-                            padding: '24px',
-                            borderRadius: '16px',
-                            width: '300px',
-                            textAlign: 'center',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-                            border: '1px solid var(--border-color)'
-                        }} onClick={(e) => e.stopPropagation()}>
-                            <h3 style={{ marginTop: 0, marginBottom: '12px' }}>Delete Session?</h3>
-                            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>This action cannot be undone.</p>
-                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                                <button onClick={() => setLogToDelete(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--text-secondary)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
-                                <button className="btn-primary" onClick={confirmDelete} style={{ padding: '10px 20px', background: '#FF5252' }}>Delete</button>
+            {/* Analytics Dashboard */}
+            {logs.length > 0 && (() => {
+                // Calculate Stats
+                const totalSessions = logs.length;
+                let totalSeconds = 0;
+                let completedSessions = 0;
+                const emotionCounts = {};
+
+                logs.forEach(log => {
+                    // Time
+                    const start = new Date(log.startTime);
+                    const end = log.endTime ? new Date(log.endTime) : null;
+                    const actualSec = end ? (end - start) / 1000 : 0;
+                    totalSeconds += actualSec;
+
+                    // Completion (Actual >= Setup * 60) within 10 second margin of error
+                    const targetSec = (log.duration || 0) * 60;
+                    if (actualSec >= (targetSec - 10)) { // 10s buffer
+                        completedSessions++;
+                    }
+
+                    // Emotions
+                    if (log.emotions) {
+                        log.emotions.forEach(e => {
+                            emotionCounts[e] = (emotionCounts[e] || 0) + 1;
+                        });
+                    }
+                });
+
+                const avgSec = Math.round(totalSeconds / totalSessions);
+                const avgMin = Math.floor(avgSec / 60);
+                const avgRemSec = avgSec % 60;
+                const completionRate = Math.round((completedSessions / totalSessions) * 100);
+
+                const topEmotions = Object.entries(emotionCounts)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 3)
+                    .map(([e]) => e);
+
+                return (
+                    <div className="stats-dashboard">
+                        <div className="stat-box">
+                            <div className="stat-label">Total Sessions</div>
+                            <div className="stat-value">{totalSessions}</div>
+                        </div>
+                        <div className="stat-box">
+                            <div className="stat-label">Avg. Time</div>
+                            <div className="stat-value">{avgMin}m {avgRemSec}s</div>
+                        </div>
+                        <div className="stat-box">
+                            <div className="stat-label">Completion</div>
+                            <div className="stat-value">{completionRate}%</div>
+                            <div className="stat-sub">Target Reached</div>
+                        </div>
+                        <div className="stat-box">
+                            <div className="stat-label">Top Emotions</div>
+                            <div className="stat-value" style={{ fontSize: '13px' }}>
+                                {topEmotions.length ? topEmotions.join(', ') : '-'}
                             </div>
                         </div>
                     </div>
-                )}
+                );
+            })()}
+
+            <div style={{ overflowY: 'auto', maxHeight: '55vh', position: 'relative' }}>
+                <ConfirmModal
+                    isOpen={!!logToDelete}
+                    onClose={() => setLogToDelete(null)}
+                    onConfirm={confirmDelete}
+                    title="Delete Session?"
+                    message="This action cannot be undone."
+                />
 
                 {reversedLogs.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No sessions yet.</p>
+                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '20px' }}>No sessions yet.</p>
                 ) : (
                     reversedLogs.map(log => {
                         const startDate = new Date(log.startTime);
@@ -147,31 +190,29 @@ const LogModal = ({ isOpen, onClose, logs, onDeleteLog }) => {
                         const s = durationSec % 60;
 
                         return (
-                            <div key={log.id} className="log-item" style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
-                                {/* Header: Date | Cross */}
-                                <div className="log-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span style={{ fontWeight: 600 }}>Date: {startDate.toLocaleDateString()}</span>
+                            <div key={log.id} className="log-item">
+                                {/* Header */}
+                                <div className="log-header">
+                                    <span>{startDate.toLocaleDateString()}</span>
                                     <span
                                         className="delete-btn"
                                         onClick={() => setLogToDelete(log.id)}
-                                        style={{ cursor: 'pointer', padding: '4px' }}
+                                        style={{ cursor: 'pointer', padding: '4px', opacity: 0.7 }}
                                     >
                                         ✕
                                     </span>
                                 </div>
 
-                                {/* Body - Requested Layout */}
-                                <div style={{ fontSize: '13px', lineHeight: '1.6', color: 'var(--text-primary)' }}>
-                                    {/* Line 1: Setup & Duration */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <div><span style={{ color: 'var(--text-secondary)' }}>Setup:</span> {log.duration} min</div>
-                                        <div><span style={{ color: 'var(--text-secondary)' }}>Duration:</span> {m}m {s}s (actual)</div>
+                                {/* Body */}
+                                <div className="log-details">
+                                    <div className="log-row">
+                                        <div><span className="text-muted">Setup:</span> {log.duration} min</div>
+                                        <div><span className="text-muted">Actual:</span> {m}m {s}s</div>
                                     </div>
 
-                                    {/* Line 2: Start & End */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                                        <div><span style={{ color: 'var(--text-secondary)' }}>Start:</span> {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                        <div><span style={{ color: 'var(--text-secondary)' }}>End:</span> {endDate ? endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
+                                    <div className="log-row" style={{ marginTop: '4px' }}>
+                                        <div><span className="text-muted">Start:</span> {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                        <div><span className="text-muted">End:</span> {endDate ? endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
                                     </div>
                                 </div>
 

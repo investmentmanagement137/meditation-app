@@ -17,11 +17,13 @@ const IntervalSelector = ({
 
     return (
         <div className="settings-row" onClick={onOpenModal}>
-            <div className="settings-row-label">Interval Bells</div>
-            <div className="settings-row-value">
-                <span id="selected-interval-name">{getLabel(selectedInterval)}</span>
-                <span>›</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>🔔</span>
+                <span style={{ fontSize: '16px', fontWeight: '500', color: 'var(--text-primary)' }}>
+                    {getLabel(selectedInterval)}
+                </span>
             </div>
+            <span style={{ color: 'var(--text-secondary)' }}>Change</span>
         </div>
     );
 };

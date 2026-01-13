@@ -110,7 +110,7 @@ function App() {
       document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen denied:', e));
     }
     // Add startTime when session begins
-    setSessionData({ ...data, startTime: new Date().toISOString() });
+    setSessionData({ ...data, startTime: new Date().toISOString(), sessionKey: Date.now() });
     setCurrentScreen('timer');
   };
 
@@ -142,6 +142,7 @@ function App() {
     setLogs(prev => [...prev, log]);
     setSessionAnalysis(null); // Reset for next session
     setCurrentScreen('setup');
+    setIsLogModalOpen(true); // Auto-show history after completion
   };
 
   const handleDeleteLog = (logId) => {
@@ -149,8 +150,8 @@ function App() {
   };
 
   return (
-    <div className="screen active">
-      {currentScreen === 'setup' && (
+    <div className="app-container">
+      <div className={`screen ${currentScreen === 'setup' ? 'active' : ''}`}>
         <SetupScreen
           onStartSession={handleStartSession}
           startNote={sessionData.note || ''}
@@ -168,15 +169,17 @@ function App() {
           savedAudios={savedAudios}
           selectedAudioId={selectedAudioId}
         />
-      )}
-      {currentScreen === 'timer' && (
-        <TimerScreen
-          sessionConfig={sessionData}
-          onEndSession={handleEndSession}
-          setSessionAnalysis={setSessionAnalysis}
-          onOpenAudioSettings={() => setIsAudioModalOpen(true)}
-        />
-      )}
+      </div>
+      <div key={sessionData.sessionKey || 'timer'} className={`screen ${currentScreen === 'timer' ? 'active' : ''}`}>
+        {currentScreen === 'timer' && (
+          <TimerScreen
+            sessionConfig={sessionData}
+            onEndSession={handleEndSession}
+            setSessionAnalysis={setSessionAnalysis}
+            onOpenAudioSettings={() => setIsAudioModalOpen(true)}
+          />
+        )}
+      </div>
 
       <EndNoteModal
         isOpen={isEndNoteOpen}
