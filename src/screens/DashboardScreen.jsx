@@ -156,11 +156,13 @@ const DashboardScreen = ({ logs, onDeleteLog }) => {
                                     <div className="log-metrics">
                                         <div className="metric">
                                             <span className="label">Planned</span>
-                                            <span className="value">{log.duration}m</span>
+                                            <span className="value">{log.duration || 0}m</span>
                                         </div>
                                         <div className="metric">
                                             <span className="label">Actual</span>
-                                            <span className="value">{m}m</span>
+                                            <span className="value" style={{ color: m < (log.duration || 0) ? '#ffcc80' : 'inherit' }}>
+                                                {m}m
+                                            </span>
                                         </div>
                                     </div>
 
