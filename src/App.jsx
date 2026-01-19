@@ -1,27 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import SetupScreen from './screens/SetupScreen';
 import TimerScreen from './screens/TimerView';
+import DashboardScreen from './screens/DashboardScreen';
+import Layout from './components/Layout';
 import EndNoteModal from './modals/EndNoteModal';
 import AudioModal from './modals/AudioModal';
 import DurationModal from './modals/DurationModal';
 import IntervalModal from './modals/IntervalModal';
-import LogModal from './modals/LogModal';
 import useLocalStorage from './hooks/useLocalStorage';
 
 // Global YouTube Player Reference
-// This is set once when the API is ready and reused
 window.ytPlayer = null;
 
-function App() {
+function AppContent() {
+  const navigate = useNavigate();
   const ytPlayerRef = useRef(null);
 
   // Load YouTube API and Initialize Player Globally on Mount
   useEffect(() => {
-    // Create the player host div immediately
+    // Initialize Theme
+    const savedTheme = localStorage.getItem('theme');
+    const root = document.documentElement;
+    if (savedTheme === 'dark') {
+      root.classList.add('dark');
+    } else if (savedTheme === 'light') {
+      root.classList.add('light');
+    }
+
     if (!document.getElementById('yt-player-host')) {
       const hostDiv = document.createElement('div');
       hostDiv.id = 'yt-player-host';
-      // Make it invisible but render-able
       hostDiv.style.position = 'absolute';
       hostDiv.style.top = '0';
       hostDiv.style.left = '0';
@@ -33,23 +42,16 @@ function App() {
       document.body.appendChild(hostDiv);
     }
 
-    // Load API
     if (!window.YT) {
       window.onYouTubeIframeAPIReady = () => {
         console.log("Global: YouTube API Ready - Creating Player");
-        // Create player without a video, just like legacy code
         window.ytPlayer = new window.YT.Player('yt-player-host', {
           height: '1',
           width: '1',
-          playerVars: {
-            'playsinline': 1,
-            'controls': 0,
-            'loop': 1
-          },
+          playerVars: { 'playsinline': 1, 'controls': 0, 'loop': 1 },
           events: {
             'onReady': () => console.log("Global: YouTube Player Ready"),
             'onStateChange': (event) => {
-              // Loop on end
               if (event.data === window.YT.PlayerState.ENDED) {
                 event.target.playVideo();
               }
@@ -63,15 +65,10 @@ function App() {
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     } else if (window.YT && window.YT.Player && !window.ytPlayer) {
-      // API already loaded but player not created
       window.ytPlayer = new window.YT.Player('yt-player-host', {
         height: '1',
         width: '1',
-        playerVars: {
-          'playsinline': 1,
-          'controls': 0,
-          'loop': 1
-        },
+        playerVars: { 'playsinline': 1, 'controls': 0, 'loop': 1 },
         events: {
           'onReady': () => console.log("Global: YouTube Player Ready"),
           'onStateChange': (event) => {
@@ -85,13 +82,11 @@ function App() {
     }
   }, []);
 
-  const [currentScreen, setCurrentScreen] = useState('setup');
   const [sessionData, setSessionData] = useState({});
   const [isEndNoteOpen, setIsEndNoteOpen] = useState(false);
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
   const [isIntervalModalOpen, setIsIntervalModalOpen] = useState(false);
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   // -- Lifted State --
   const [durations, setDurations] = useLocalStorage('meditation_durations', [5, 10, 15, 20]);
@@ -109,9 +104,8 @@ function App() {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen denied:', e));
     }
-    // Add startTime when session begins
     setSessionData({ ...data, startTime: new Date().toISOString(), sessionKey: Date.now() });
-    setCurrentScreen('timer');
+    navigate('/timer');
   };
 
   const handleEndSession = () => {
@@ -121,14 +115,11 @@ function App() {
     setIsEndNoteOpen(true);
   };
 
-  // Session Gemini Analysis Results (populated by TimerView)
   const [sessionAnalysis, setSessionAnalysis] = useState(null);
 
   const handleSaveEndNote = (endNote) => {
-    // End the session flow
     setIsEndNoteOpen(false);
 
-    // Build complete log entry matching legacy structure
     const log = {
       id: Date.now(),
       startTime: sessionData.startTime || new Date().toISOString(),
@@ -143,9 +134,8 @@ function App() {
     };
 
     setLogs(prev => [...prev, log]);
-    setSessionAnalysis(null); // Reset for next session
-    setCurrentScreen('setup');
-    setIsLogModalOpen(true); // Auto-show history after completion
+    setSessionAnalysis(null);
+    navigate('/dashboard');
   };
 
   const handleDeleteLog = (logId) => {
@@ -153,28 +143,39 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      <div className={`screen ${currentScreen === 'setup' ? 'active' : ''}`}>
-        <SetupScreen
-          onStartSession={handleStartSession}
-          startNote={sessionData.note || ''}
-          setStartNote={(n) => setSessionData({ ...sessionData, note: n })}
-          openAudioModal={() => setIsAudioModalOpen(true)}
-          openLogs={() => setIsLogModalOpen(true)}
-          openDurationModal={() => setIsDurationModalOpen(true)}
-          openIntervalModal={() => setIsIntervalModalOpen(true)}
-          durations={durations}
-          selectedDuration={selectedDuration}
-          setSelectedDuration={setSelectedDuration}
-          customIntervals={customIntervals}
-          selectedInterval={selectedInterval}
-          setSelectedInterval={setSelectedInterval}
-          savedAudios={savedAudios}
-          selectedAudioId={selectedAudioId}
-        />
-      </div>
-      <div key={sessionData.sessionKey || 'timer'} className={`screen ${currentScreen === 'timer' ? 'active' : ''}`}>
-        {currentScreen === 'timer' && (
+    <div className="app-container min-h-screen bg-gray-50 dark:bg-gray-950">
+      <Routes>
+        {/* Helper function to wrap components with Layout */}
+        <Route element={<Layout />}>
+          <Route path="/" element={
+            <SetupScreen
+              onStartSession={handleStartSession}
+              startNote={sessionData.note || ''}
+              setStartNote={(n) => setSessionData({ ...sessionData, note: n })}
+              openAudioModal={() => setIsAudioModalOpen(true)}
+              openLogs={() => navigate('/dashboard')}
+              openDurationModal={() => setIsDurationModalOpen(true)}
+              openIntervalModal={() => setIsIntervalModalOpen(true)}
+              durations={durations}
+              selectedDuration={selectedDuration}
+              setSelectedDuration={setSelectedDuration}
+              customIntervals={customIntervals}
+              selectedInterval={selectedInterval}
+              setSelectedInterval={setSelectedInterval}
+              savedAudios={savedAudios}
+              selectedAudioId={selectedAudioId}
+            />
+          } />
+          <Route path="/dashboard" element={
+            <DashboardScreen
+              logs={logs}
+              onDeleteLog={handleDeleteLog}
+            />
+          } />
+        </Route>
+
+        {/* Timer is standalone */}
+        <Route path="/timer" element={
           <TimerScreen
             sessionConfig={sessionData}
             activeAudioId={selectedAudioId}
@@ -183,12 +184,13 @@ function App() {
             setSessionAnalysis={setSessionAnalysis}
             onOpenAudioSettings={() => setIsAudioModalOpen(true)}
           />
-        )}
-      </div>
+        } />
+      </Routes>
 
+      {/* Global Modals */}
       <EndNoteModal
         isOpen={isEndNoteOpen}
-        onClose={() => handleSaveEndNote(null)} // Dismissing = Save with empty note
+        onClose={() => handleSaveEndNote(null)}
         onSave={handleSaveEndNote}
         initialNote=""
       />
@@ -218,14 +220,16 @@ function App() {
         customIntervals={customIntervals}
         setCustomIntervals={setCustomIntervals}
       />
-
-      <LogModal
-        isOpen={isLogModalOpen}
-        onClose={() => setIsLogModalOpen(false)}
-        logs={logs}
-        onDeleteLog={handleDeleteLog}
-      />
     </div>
   );
 }
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
 export default App;
