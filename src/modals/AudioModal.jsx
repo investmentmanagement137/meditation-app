@@ -207,22 +207,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                             )}
                         </div>
 
-                        {/* Collection Input */}
-                        {isAdding === 'collection' && (
-                            <div className="inline-input-area">
-                                <input
-                                    autoFocus
-                                    placeholder="Playlist Name..."
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreateCollection(); }}
-                                />
-                                <div className="inline-actions">
-                                    <button onClick={() => setIsAdding(false)}>Cancel</button>
-                                    <button onClick={handleCreateCollection}>Create</button>
-                                </div>
-                            </div>
-                        )}
+
                     </div>
 
                     {/* SECTION 2: ALL AUDIOS */}
@@ -267,22 +252,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                             )}
                         </div>
 
-                        {/* Audio Input */}
-                        {isAdding === 'audio' && (
-                            <div className="inline-input-area">
-                                <input
-                                    autoFocus
-                                    placeholder="YouTube/Audio URL..."
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddAudio(); }}
-                                />
-                                <div className="inline-actions">
-                                    <button onClick={() => setIsAdding(false)}>Cancel</button>
-                                    <button onClick={handleAddAudio}>Add</button>
-                                </div>
-                            </div>
-                        )}
+
                     </div>
                 </div>
             );
@@ -331,6 +301,37 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         );
     };
 
+    const renderAddOverlay = () => {
+        if (!isAdding) return null;
+
+        const isCollection = isAdding === 'collection';
+        const title = isCollection ? "New Playlist" : "Add Audio";
+        const placeholder = isCollection ? "Playlist Name..." : "Paste YouTube/Audio URL...";
+        const actionLabel = isCollection ? "Create" : "Add";
+        const handleConfirm = isCollection ? handleCreateCollection : handleAddAudio;
+
+        return (
+            <div className="add-overlay">
+                <div className="add-card">
+                    <h3 className="add-title">{title}</h3>
+                    <input
+                        autoFocus
+                        className="add-input"
+                        placeholder={placeholder}
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleConfirm(); }}
+                    />
+                    <div className="add-actions">
+                        <button className="btn-cancel" onClick={() => setIsAdding(false)}>Cancel</button>
+                        <button className="btn-confirm" onClick={handleConfirm}>{actionLabel}</button>
+                    </div>
+                </div>
+                <div className="overlay-backdrop" onClick={() => setIsAdding(false)} />
+            </div>
+        );
+    };
+
     return (
         <BaseModal isOpen={isOpen} onClose={onClose} title={<span>&nbsp;</span>}>
             <ConfirmModal
@@ -352,26 +353,9 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     {renderList()}
                 </div>
 
-                {/* Input Area for Adding */}
-                {isAdding && (
-                    <div className="pm-input-area">
-                        <input
-                            autoFocus
-                            placeholder={isAdding === 'collection' ? "Collection Name..." : "Paste YouTube/Audio URL..."}
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') isAdding === 'collection' ? handleCreateCollection() : handleAddAudio();
-                            }}
-                        />
-                        <div className="pm-input-actions">
-                            <button className="btn-cancel" onClick={() => setIsAdding(false)}>Cancel</button>
-                            <button className="btn-confirm" onClick={isAdding === 'collection' ? handleCreateCollection : handleAddAudio}>
-                                {isAdding === 'collection' ? 'Create' : 'Add'}
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {renderAddOverlay()}
+
+
             </div>
 
             <style>{`
@@ -420,48 +404,98 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     font-style: italic;
                     padding: 8px 12px;
                 }
-                .inline-input-area {
+                /* Overlay Styles */
+                .add-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    z-index: 50;
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                    background: rgba(255,255,255,0.05);
-                    padding: 4px 8px;
-                    border-radius: 8px;
-                    margin-top: 8px;
-                    border: 1px solid rgba(255,255,255,0.1);
+                    justify-content: center;
+                    padding: 20px;
                 }
-                .inline-input-area input {
-                    flex: 1;
-                    background: transparent;
-                    border: none;
-                    color: var(--text-primary);
-                    font-size: 0.9rem;
-                    outline: none;
-                    padding: 8px 0;
+                .overlay-backdrop {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    backdrop-filter: blur(4px);
+                    z-index: 1;
                 }
-                .inline-actions {
+                .add-card {
+                    position: relative;
+                    z-index: 2;
+                    background: rgba(20, 20, 20, 0.65);
+                    backdrop-filter: blur(16px);
+                    -webkit-backdrop-filter: blur(16px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                    border-radius: 16px;
+                    padding: 24px;
+                    width: 100%;
+                    max-width: 320px;
                     display: flex;
-                    gap: 8px;
+                    flex-direction: column;
+                    gap: 16px;
+                    animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
-                .inline-actions button {
-                    background: rgba(255,255,255,0.1);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    cursor: pointer;
-                    font-size: 0.8rem;
-                    padding: 6px 12px;
+                @keyframes popIn {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .add-title {
+                    font-size: 1.1rem;
+                    font-weight: 600;
                     color: var(--text-primary);
-                    border-radius: 6px;
+                    margin: 0;
+                }
+                .add-input {
+                    background: rgba(0, 0, 0, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    padding: 12px;
+                    color: var(--text-primary);
+                    font-size: 1rem;
+                    width: 100%;
+                }
+                .add-input:focus {
+                    outline: none;
+                    border-color: var(--primary-color);
+                }
+                .add-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 12px;
+                }
+                .add-actions button {
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 0.95rem;
+                    cursor: pointer;
                     transition: all 0.2s;
                 }
-                .inline-actions button:hover {
-                    background: rgba(var(--primary-rgb), 0.2);
-                    border-color: var(--primary-color);
+                .btn-cancel {
+                    background: transparent;
+                    border: 1px solid transparent;
+                    color: var(--text-secondary);
+                }
+                .btn-cancel:hover {
+                    color: var(--text-primary);
+                    background: rgba(255,255,255,0.05);
+                }
+                .btn-confirm {
+                    background: var(--primary-color);
+                    border: 1px solid var(--primary-color);
                     color: white;
                 }
-                /* Specific style for Cancel button if needed, but generic hover works fine */
-                .inline-actions button:first-child:hover {
-                    background: rgba(255,50,50,0.2);
-                    border-color: rgba(255,50,50,0.5);
+                .btn-confirm:hover {
+                    opacity: 0.9;
+                    transform: translateY(-1px);
                 }
                 
                 .pm-header {
