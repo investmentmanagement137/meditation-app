@@ -404,21 +404,22 @@ h2 {
     box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
-flex: 1;
-aspect-ratio: 1;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 18px;
-/* Slightly smaller font if needed */
-font-weight: 600;
-border-radius: var(--btn-radius);
-background-color: var(--surface);
-cursor: pointer;
-transition: all 0.3s ease;
-border: var(--border-line);
-min-width: 0;
-/* Allow shrinking to fit 6 items in row */
+.duration-option {
+    flex: 1;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: var(--btn-radius);
+    background-color: var(--surface);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: var(--border-line);
+    min-width: 0;
+    /* Allow shrinking to fit 6 items in row */
+}
 
 .duration-option:hover {
     background-color: var(--surface-hover);
