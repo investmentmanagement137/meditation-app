@@ -7,14 +7,15 @@ const DurationModal = ({ isOpen, onClose, onSelect, durations, setDurations }) =
     const handleAdd = () => {
         const val = parseInt(customVal);
         if (val && val > 0 && !durations.includes(val)) {
-            // FIFO Queue Logic: Append new, remove oldest from front if > 6
+            // Limit to max 6 saved values with FIFO eviction
+            // We append the new value to the end.
             let newDurations = [...durations, val];
+
+            // If we exceed 6, we remove the "oldest" value.
+            // Since we append to the end, the oldest value is at index 0.
             if (newDurations.length > 6) {
                 newDurations = newDurations.slice(newDurations.length - 6);
             }
-
-            // For now, let's NOT limit strictly or we need a better data structure than just sorted numbers.
-            // Just set it.
             setDurations(newDurations);
             onSelect(val);
             onClose();
