@@ -226,7 +226,7 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/meditation-app">
       <AppContent />
     </BrowserRouter>
   );
