@@ -81,15 +81,17 @@ const SetupScreen = ({
                 </button>
             </div>
 
-            <DurationSelector
-                durations={sortedDurations}
-                selectedDuration={selectedDuration}
-                onSelect={setSelectedDuration}
-                onAddClick={openDurationModal}
-            />
-
-
             <div className="setup-section">
+                <div style={{ marginBottom: '24px' }}>
+                    <div className="section-title">Select Duration</div>
+                    <DurationSelector
+                        durations={sortedDurations}
+                        selectedDuration={selectedDuration}
+                        onSelect={setSelectedDuration}
+                        onAddClick={openDurationModal}
+                    />
+                </div>
+
                 <div style={{ marginBottom: '24px' }}>
                     <div className="section-title">Interval Bells</div>
                     <IntervalSelector
@@ -105,7 +107,7 @@ const SetupScreen = ({
                 </div>
 
                 <div className="notes-section">
-                    <label className="notes-label">Intention (Optional)</label>
+                    <div className="section-title">Intention (Optional)</div>
                     <textarea
                         className="notes-input"
                         placeholder="What is your intention for this session?"

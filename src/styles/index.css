@@ -257,10 +257,16 @@ h2 {
 /* Duration Selector */
 .duration-scroller {
     display: flex;
-    justify-content: space-between;
-    gap: 8px;
+    justify-content: flex-start;
+    /* Was space-between, but if wrapping, start is usually better to keep grid alignment? Or keep space-between if rows are full? Let's try space-between but with wrapping, it might look odd on last row. */
+    /* If user wants "older size", flex: 1 might be issue if it forces expansion. 
+       Let's keep space-between but allow wrap. Ideally grid is better but let's stick to flex wrap. */
+    flex-wrap: wrap;
+    gap: 12px;
+    /* Increase gap slightly for touch targets if we have space */
     width: 100%;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
+    /* Reduced from 40px since we added section margin */
 }
 
 /* Timer Screen */
@@ -402,7 +408,17 @@ h2 {
 }
 
 .duration-option {
+    /* flex: 1;  <-- removing flex: 1 to prevent excessive growing/shrinking if we want fixed "older" size look? 
+       Actually, if we want them to fill the row, flex: 1 is good. 
+       But we want a min-width to trigger the wrap. */
+    flex: 0 0 calc(25% - 12px);
+    /* 4 items per row roughly? Or 3? 
+       Old was 4 items? [5,10,15,20].
+       If we have 6 items, maybe 3 per row? 33%? 
+       Let's try a min-width roughly 60px or flex basis. */
     flex: 1;
+    min-width: 60px;
+    /* Ensure they don't shrink below a usable size */
     aspect-ratio: 1;
     display: flex;
     align-items: center;
@@ -414,8 +430,7 @@ h2 {
     cursor: pointer;
     transition: all 0.3s ease;
     border: var(--border-line);
-    min-width: 0;
-    /* Prevent overflow */
+    /* min-width: 0; <-- Removed to allow min-width: 60px to take effect */
 }
 
 .duration-option:hover {
