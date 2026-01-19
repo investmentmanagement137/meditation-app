@@ -62,7 +62,65 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         let finalAudio = null;
 
         if (url.includes('list=')) {
-            // Playlist Logic (Simplified for now - just warn or take first)
+            // Playlist Logic with Webhook
+            try {
+                const response = await fetch('https://n8np.puribijay.com.np/webhook/060555cc-04fc-429d-9630-0ac4fa0d3650', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Assumed format: array of { title, videoId, ... } or similar. 
+                    // Adjusting mapping based on likely structure or generic mapping.
+                    // If the webhook returns exactly what we need, great. 
+                    // Let's assume it returns an array of objects that have at least videoId/id and title.
+
+                    if (Array.isArray(data)) {
+                        const newAudios = data.map(item => ({
+                            id: item.videoId || item.id, // reliable fallback
+                            name: item.title || 'Unknown Track',
+                            creator: item.channelTitle || item.creator || 'Unknown Artist',
+                            type: 'youtube',
+                            thumbnail: item.thumbnail || `https://img.youtube.com/vi/${item.videoId || item.id}/hqdefault.jpg`
+                        })).filter(a => a.id); // Ensure valid ID
+
+                        if (newAudios.length > 0) {
+                            // Add all to library
+                            const currentIds = new Set(savedAudios.map(a => a.id));
+                            const uniqueNewAudios = newAudios.filter(a => !currentIds.has(a.id));
+                            const updatedSavedAudios = [...savedAudios, ...uniqueNewAudios];
+                            setSavedAudios(updatedSavedAudios);
+
+                            // Add all IDs to current collection
+                            if (activeCollection) {
+                                const newIds = newAudios.map(a => a.id);
+                                const updatedCollections = collections.map(c => {
+                                    if (c.id === activeCollection.id) {
+                                        // Merge and unique
+                                        const combinedIds = Array.from(new Set([...c.audioIds, ...newIds]));
+                                        return { ...c, audioIds: combinedIds };
+                                    }
+                                    return c;
+                                });
+                                setCollections(updatedCollections);
+                            }
+
+                            setIsAdding(false);
+                            setInputValue('');
+                            return; // Exit, success
+                        }
+                    }
+                } else {
+                    console.warn("Webhook failed, falling back to single video.");
+                }
+            } catch (error) {
+                console.error("Error fetching playlist:", error);
+                // Fallback will happen below
+            }
+
+            // Fallback: Extract single video ID if webhook fails or returns empty
             const videoId = AudioUtils.extractVideoID(url);
             if (videoId) {
                 const { title, creator } = await AudioUtils.fetchYouTubeTitle(videoId);

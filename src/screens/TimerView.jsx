@@ -217,7 +217,7 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
                 {/* Content Overlay */}
                 <div className="timer-content-overlay">
                     {/* Quote Container */}
-                    <div style={{ width: '100%', marginBottom: '20px', height: 'auto', minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="timer-quote-container">
                         <QuoteCarousel quotes={quotes} />
                     </div>
 
@@ -226,20 +226,10 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
                         className="timer-audio-btn-wrapper"
                         onTouchStart={onTouchStart}
                         onTouchEnd={onTouchEnd}
-                        style={{ padding: '20px' }} // Increase touch target
                     >
                         <button
-                            className="icon-btn"
+                            className="icon-btn timer-audio-btn"
                             onClick={onOpenAudioSettings}
-                            style={{
-                                background: 'rgba(255,255,255,0.1)',
-                                width: '40px',
-                                height: '40px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backdropFilter: 'blur(4px)'
-                            }}
                             title="Change Audio (Swipe Left/Right to Cycle)"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
@@ -252,7 +242,7 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
             </div>
 
             {/* Digital Clock - Enlarged */}
-            <div className="timer-digital-clock" style={{ fontSize: '100px', fontWeight: 'bold', marginTop: '10px' }}>
+            <div className="timer-digital-clock">
                 {m}:{s}
             </div>
 

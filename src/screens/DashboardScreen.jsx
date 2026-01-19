@@ -164,6 +164,24 @@ const DashboardScreen = ({ logs, onDeleteLog }) => {
                                         </div>
                                     </div>
 
+                                    {/* Notes Display */}
+                                    {(log.startNote || log.endNote) && (
+                                        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {log.startNote && (
+                                                <div className="log-item-note">
+                                                    <div className="log-item-note-label">Intention</div>
+                                                    {log.startNote}
+                                                </div>
+                                            )}
+                                            {log.endNote && (
+                                                <div className="log-item-note">
+                                                    <div className="log-item-note-label">Reflection</div>
+                                                    {log.endNote}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {(log.emotions?.length > 0 || log.causes?.length > 0) && (
                                         <div className="log-tags">
                                             {log.emotions?.map((e, i) => <span key={`e-${i}`} className="tag emotion">{e}</span>)}
