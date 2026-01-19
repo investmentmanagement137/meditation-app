@@ -1477,3 +1477,74 @@ input:checked+.slider:before {
     padding-bottom: 0;
 }
 
+
+/* Animated Theme Toggle */
+.theme-toggle-btn {
+    width: 24px;
+    height: 24px;
+    position: relative;
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.theme-toggle-btn:hover {
+    transform: rotate(90deg);
+}
+
+.theme-toggle-icon {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Sun/Moon Shapes */
+.sun-moon {
+    width: 14px;
+    height: 14px;
+    background: var(--text-primary);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--text-primary), 0 0 0 4px transparent;
+    transition: all 0.4s ease;
+    position: absolute;
+}
+
+/* Light Mode = Sun */
+:root:not(.dark) .sun-moon {
+    background: var(--text-primary);
+    box-shadow: 0 0 0 3px transparent, 0 0 0 1px var(--text-primary), 0 0 0 5px rgba(255, 165, 0, 0.2);
+    transform: scale(0.6);
+}
+
+:root:not(.dark) .theme-toggle-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    border: 2px dashed var(--text-primary);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotate(0deg);
+    animation: sunSpin 10s linear infinite;
+}
+
+@keyframes sunSpin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Dark Mode = Moon */
+:root.dark .sun-moon {
+    background: transparent;
+    box-shadow: -4px -2px 0 0 var(--text-primary);
+    transform: scale(1) translate(2px, -2px);
+}
+
+:root.dark .theme-toggle-btn::after {
+    content: none;
+}
+

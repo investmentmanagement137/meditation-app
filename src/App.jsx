@@ -94,6 +94,7 @@ function AppContent() {
   const [savedAudios, setSavedAudios] = useLocalStorage('meditation_audios', [
     { id: '1', name: 'None', type: 'none' }
   ]);
+  const [collections, setCollections] = useLocalStorage('meditation_collections', []);
   const [logs, setLogs] = useLocalStorage('meditation_sessions', []);
 
   const [selectedDuration, setSelectedDuration] = useLocalStorage('selected_duration', 10);
@@ -164,6 +165,8 @@ function AppContent() {
               setSelectedInterval={setSelectedInterval}
               savedAudios={savedAudios}
               selectedAudioId={selectedAudioId}
+              collections={collections}
+              setCollections={setCollections}
             />
           } />
           <Route path="/dashboard" element={
@@ -202,6 +205,8 @@ function AppContent() {
         currentAudioId={selectedAudioId}
         savedAudios={savedAudios}
         setSavedAudios={setSavedAudios}
+        collections={collections}
+        setCollections={setCollections}
       />
 
       <DurationModal
