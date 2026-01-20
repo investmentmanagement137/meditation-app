@@ -1,41 +1,86 @@
 :root {
-    --primary: #5C6BC0;
-    --primary-light: #7986CB;
-    --background: #1a1a2e;
-    --background-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
-    --surface: rgba(255, 255, 255, 0.08);
-    --surface-hover: rgba(255, 255, 255, 0.12);
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.6);
-    --ring-track: #333333;
-    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --btn-radius: 16px;
-    --border-line: 1px solid rgba(255, 255, 255, 0.1);
+    /* Pro Max Dark Theme (Default) */
+    --primary: #6366f1;
+    /* Indigo 500 */
+    --primary-light: #818cf8;
+    /* Indigo 400 */
+    --background: #0f172a;
+    /* Slate 900 */
+    --background-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    /* Slate -> Indigo */
+    --surface: rgba(30, 41, 59, 0.7);
+    /* Slate 800 (Alpha) */
+    --surface-hover: rgba(51, 65, 85, 0.8);
+    /* Slate 700 (Alpha) */
+    --text-primary: #f8fafc;
+    /* Slate 50 */
+    --text-secondary: #94a3b8;
+    /* Slate 400 */
+    --ring-track: #1e293b;
+    /* Slate 800 */
+    --font-stack: 'Outfit', 'Inter', -apple-system, sans-serif;
+    --btn-radius: 20px;
+    --border-line: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-/* Light Theme Overrides (Manual or System) */
+/* Light Theme Overrides */
+/* 1. Manual Light Mode Class */
+/* Light Theme Variables */
+/* 1. Manual Light Mode Class */
+:root.light {
+    --primary: #6366f1;
+    /* Indigo 500 */
+    --primary-light: #818cf8;
+    /* Indigo 400 */
+    --background: #f1f5f9;
+    /* Slate 100 - Warmer than Slate 50 */
+    --background-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    /* Soft Slate Gradient */
+    --surface: rgba(255, 255, 255, 0.9);
+    /* Higher Opacity */
+    --surface-hover: #ffffff;
+    --text-primary: #1e293b;
+    /* Slate 800 - Good contrast */
+    --text-secondary: #64748b;
+    /* Slate 500 */
+    --ring-track: #cbd5e1;
+    /* Slate 300 */
+    --border-line: 1px solid rgba(0, 0, 0, 0.08);
+    /* Slightly darker border */
+}
+
+/* Sticky Action Bar for Start Button */
+.sticky-action-bar {
+    position: absolute;
+    /* Fixed relative to the transformed parent (.screen) */
+    bottom: 75px;
+    left: 0;
+    width: 100%;
+    padding: 0 24px;
+    z-index: 50;
+    pointer-events: none;
+}
+
+.sticky-action-bar button {
+    pointer-events: auto;
+    /* Re-enable clicks on button */
+    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+}
+
+/* 2. System Preference (only if no class overrides) */
 @media (prefers-color-scheme: light) {
     :root:not(.dark) {
-        --primary: #5C6BC0;
-        --background: #f8f9ff;
-        --background-gradient: linear-gradient(135deg, #f8f9ff 0%, #e8eaf6 50%, #f8f9ff 100%);
-        --surface: rgba(92, 107, 192, 0.1);
-        --surface-hover: rgba(92, 107, 192, 0.15);
-        --text-primary: #1a1a2e;
-        --text-secondary: rgba(26, 26, 46, 0.6);
-        --ring-track: #e0e0e0;
+        --primary: #6366f1;
+        --primary-light: #818cf8;
+        --background: #f1f5f9;
+        --background-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        --surface: rgba(255, 255, 255, 0.9);
+        --surface-hover: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --ring-track: #cbd5e1;
+        --border-line: 1px solid rgba(0, 0, 0, 0.08);
     }
-}
-
-:root.light {
-    --primary: #5C6BC0;
-    --background: #f8f9ff;
-    --background-gradient: linear-gradient(135deg, #f8f9ff 0%, #e8eaf6 50%, #f8f9ff 100%);
-    --surface: rgba(92, 107, 192, 0.1);
-    --surface-hover: rgba(92, 107, 192, 0.15);
-    --text-primary: #1a1a2e;
-    --text-secondary: rgba(26, 26, 46, 0.6);
-    --ring-track: #e0e0e0;
 }
 
 * {
@@ -55,6 +100,25 @@ body {
     flex-direction: column;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
+    /* Smooth Theme Transition */
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Page Transitions */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.98) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.screen-content {
+    animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ... App Container ... */
@@ -763,6 +827,54 @@ option {
     display: inline-block;
     width: 50px;
     height: 28px;
+}
+
+/* Theme Toggle - Pill Style */
+.theme-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-track {
+    position: relative;
+    width: 56px;
+    height: 32px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    transition: background 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-track.light {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+}
+
+.toggle-thumb {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    left: 4px;
+}
+
+.toggle-track.light .toggle-thumb {
+    transform: translateX(24px);
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1e293b;
 }
 
 .switch input {
