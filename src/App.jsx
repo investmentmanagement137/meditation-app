@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import SetupScreen from './screens/SetupScreen';
 import TimerScreen from './screens/TimerView';
 import DashboardScreen from './screens/DashboardScreen';
+import LogsScreen from './screens/LogsScreen';
+import MyAIScreen from './screens/MyAIScreen';
 import Layout from './components/Layout';
 import EndNoteModal from './modals/EndNoteModal';
 import AudioModal from './modals/AudioModal';
@@ -131,7 +133,9 @@ function AppContent() {
       emotions: sessionAnalysis?.emotions || [],
       causes: sessionAnalysis?.causes || [],
       model: sessionAnalysis?.model || null,
-      tokens: sessionAnalysis?.usage?.totalTokenCount || null
+      model: sessionAnalysis?.model || null,
+      tokens: sessionAnalysis?.usage?.totalTokenCount || null,
+      audioDetails: savedAudios.find(a => a.id === sessionData.audioId) || null
     };
 
     setLogs(prev => [...prev, log]);
@@ -154,7 +158,7 @@ function AppContent() {
               startNote={sessionData.note || ''}
               setStartNote={(n) => setSessionData({ ...sessionData, note: n })}
               openAudioModal={() => setIsAudioModalOpen(true)}
-              openLogs={() => navigate('/dashboard')}
+              openLogs={() => navigate('/logs')}
               openDurationModal={() => setIsDurationModalOpen(true)}
               openIntervalModal={() => setIsIntervalModalOpen(true)}
               durations={durations}
@@ -172,8 +176,19 @@ function AppContent() {
           <Route path="/dashboard" element={
             <DashboardScreen
               logs={logs}
+              savedAudios={savedAudios}
+              selectedAudioId={selectedAudioId}
+              onOpenAudioModal={() => setIsAudioModalOpen(true)}
+            />
+          } />
+          <Route path="/logs" element={
+            <LogsScreen
+              logs={logs}
               onDeleteLog={handleDeleteLog}
             />
+          } />
+          <Route path="/my-ai" element={
+            <MyAIScreen />
           } />
         </Route>
 
