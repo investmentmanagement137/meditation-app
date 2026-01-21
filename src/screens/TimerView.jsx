@@ -84,7 +84,8 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
     const onComplete = () => {
         console.log("Session Complete");
         playBell('end');
-        onEndSession();
+        // Full duration completed
+        onEndSession(duration);
     };
 
     const onInterval = (current, total) => {
@@ -204,9 +205,18 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
         }
     }, [note, geminiApiKey]);
 
+    // Digital Clock & Total Seconds for Ring
     const m = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
     const s = (remainingSeconds % 60).toString().padStart(2, '0');
     const totalSecs = (duration || 10) * 60;
+
+    const onManualStop = () => {
+        stopTimer();
+        // Calculate elapsed minutes based on totalSecs defined in component scope
+        const elapsedSecs = totalSecs - remainingSeconds;
+        const elapsedMinutes = Math.floor(elapsedSecs / 60);
+        onEndSession(elapsedMinutes);
+    };
 
     return (
         <div className="screen-content timer-container">
@@ -261,7 +271,7 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
                         </svg>
                     )}
                 </button>
-                <button className="control-btn stop" onClick={() => { stopTimer(); onEndSession(); }}>
+                <button className="control-btn stop" onClick={onManualStop}>
                     <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32" fill="currentColor">
                         <path d="M0 0h24v24H0V0z" fill="none" />
                         <path d="M6 6h12v12H6z" />

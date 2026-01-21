@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, Sparkles } from 'lucide-react';
+import { Home, LayoutDashboard, Settings } from 'lucide-react';
 
 const BottomNavigation = () => {
     return (
@@ -23,17 +23,17 @@ const BottomNavigation = () => {
                     }
                 >
                     <LayoutDashboard size={24} />
-                    <span className="nav-label">Dash</span>
+                    <span className="nav-label">Analytics</span>
                 </NavLink>
 
                 <NavLink
-                    to="/my-ai"
+                    to="/settings"
                     className={({ isActive }) =>
                         `nav-item ${isActive ? 'active' : ''}`
                     }
                 >
-                    <Sparkles size={24} />
-                    <span className="nav-label">My AI</span>
+                    <Settings size={24} />
+                    <span className="nav-label">Settings</span>
                 </NavLink>
             </div>
         </nav>

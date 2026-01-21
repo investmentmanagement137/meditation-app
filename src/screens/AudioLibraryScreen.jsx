@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import BaseModal from '../components/BaseModal';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AudioUtils } from '../hooks/useAudio';
 import ConfirmModal from '../components/ConfirmModal';
+import { ArrowLeft } from 'lucide-react';
 
-const DEFAULT_AUDIOS = [
-    { id: '1', name: 'None', type: 'none' }
-];
-
-const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, setSavedAudios, collections = [], setCollections }) => {
+const AudioLibraryScreen = ({
+    activeAudioId,
+    onSelectAudio,
+    savedAudios,
+    setSavedAudios,
+    collections,
+    setCollections
+}) => {
+    const navigate = useNavigate();
 
     // Navigation State: ['root'] -> ['library'] or ['collection', 'id']
     const [navPath, setNavPath] = useState(['root']);
@@ -17,14 +22,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
     // "Add Audio" or "Create Collection" Input State
     const [isAdding, setIsAdding] = useState(false); // 'audio' or 'collection' or false
     const [inputValue, setInputValue] = useState('');
-
-    useEffect(() => {
-        if (isOpen) {
-            setNavPath(['root']);
-            setIsAdding(false);
-            setInputValue('');
-        }
-    }, [isOpen]);
 
     // --- Helpers ---
     const getActiveCollection = () => {
@@ -57,9 +54,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         if (!url) return;
 
         let newAudioId = null;
-
-        // Check if existing in Library first (by URL duplication check could be hard, assuming new for now)
-        // ... Logic from previous implementation ...
         let finalAudio = null;
 
         if (url.includes('list=')) {
@@ -73,33 +67,25 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
 
                 if (response.ok) {
                     const data = await response.json();
-                    // Assumed format: array of { title, videoId, ... } or similar. 
-                    // Adjusting mapping based on likely structure or generic mapping.
-                    // If the webhook returns exactly what we need, great. 
-                    // Let's assume it returns an array of objects that have at least videoId/id and title.
-
                     if (Array.isArray(data)) {
                         const newAudios = data.map(item => ({
-                            id: item.videoId || item.id, // reliable fallback
+                            id: item.videoId || item.id,
                             name: item.title || 'Unknown Track',
                             creator: item.channelTitle || item.creator || 'Unknown Artist',
                             type: 'youtube',
                             thumbnail: item.thumbnail || `https://img.youtube.com/vi/${item.videoId || item.id}/hqdefault.jpg`
-                        })).filter(a => a.id); // Ensure valid ID
+                        })).filter(a => a.id);
 
                         if (newAudios.length > 0) {
-                            // Add all to library
                             const currentIds = new Set(savedAudios.map(a => a.id));
                             const uniqueNewAudios = newAudios.filter(a => !currentIds.has(a.id));
                             const updatedSavedAudios = [...savedAudios, ...uniqueNewAudios];
                             setSavedAudios(updatedSavedAudios);
 
-                            // Add all IDs to current collection
                             if (activeCollection) {
                                 const newIds = newAudios.map(a => a.id);
                                 const updatedCollections = collections.map(c => {
                                     if (c.id === activeCollection.id) {
-                                        // Merge and unique
                                         const combinedIds = Array.from(new Set([...c.audioIds, ...newIds]));
                                         return { ...c, audioIds: combinedIds };
                                     }
@@ -110,18 +96,14 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
 
                             setIsAdding(false);
                             setInputValue('');
-                            return; // Exit, success
+                            return;
                         }
                     }
-                } else {
-                    console.warn("Webhook failed, falling back to single video.");
                 }
             } catch (error) {
                 console.error("Error fetching playlist:", error);
-                // Fallback will happen below
             }
 
-            // Fallback: Extract single video ID if webhook fails or returns empty
             const videoId = AudioUtils.extractVideoID(url);
             if (videoId) {
                 const { title, creator } = await AudioUtils.fetchYouTubeTitle(videoId);
@@ -145,7 +127,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         }
 
         if (finalAudio) {
-            // Check if already in library
             const existing = savedAudios.find(a => a.id === finalAudio.id);
             if (!existing) {
                 setSavedAudios([...savedAudios, finalAudio]);
@@ -154,7 +135,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 newAudioId = existing.id;
             }
 
-            // If in collection, add ID to collection
             if (activeCollection) {
                 const updatedCollections = collections.map(c => {
                     if (c.id === activeCollection.id && !c.audioIds.includes(newAudioId)) {
@@ -165,7 +145,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 setCollections(updatedCollections);
             }
 
-            // Auto Select? Maybe not, just add.
             setIsAdding(false);
             setInputValue('');
         } else {
@@ -174,7 +153,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
     };
 
     // 3. Delete Audio
-    const [itemToDelete, setItemToDelete] = useState(null); // { type: 'audio'|'collection', id: string }
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     const confirmDelete = () => {
         if (!itemToDelete) return;
@@ -183,7 +162,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
             setCollections(collections.filter(c => c.id !== itemToDelete.id));
         } else if (itemToDelete.type === 'audio') {
             if (activeCollection) {
-                // Remove from collection ONLY
                 const updatedCollections = collections.map(c => {
                     if (c.id === activeCollection.id) {
                         return { ...c, audioIds: c.audioIds.filter(id => id !== itemToDelete.id) };
@@ -192,7 +170,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 });
                 setCollections(updatedCollections);
             } else {
-                // Remove from Library (Global) - also remove from all collections
                 setSavedAudios(savedAudios.filter(a => a.id !== itemToDelete.id));
                 const updatedCollections = collections.map(c => ({
                     ...c,
@@ -206,33 +183,12 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
 
 
     // --- Render Content ---
-    const renderHeader = () => {
-        if (currentView === 'root') {
-            return null;
-        } else if (currentView === 'library') {
-            return (
-                <div className="modal-header-with-back">
-                    <button onClick={() => setNavPath(['root'])}>←</button>
-                    <span>All Tracks</span>
-                </div>
-            );
-        } else if (activeCollection) {
-            return (
-                <div className="modal-header-with-back">
-                    <button onClick={() => setNavPath(['root'])}>←</button>
-                    <span>{activeCollection.name}</span>
-                </div>
-            );
-        }
-        return null; // Should not happen with current navPath logic
-    };
-
     const renderList = () => {
         // A. Root View
         if (currentView === 'root') {
             return (
                 <div className="list-group-root">
-                    {/* Toggle Switch (Audio | Playlist) */}
+                    {/* Toggle Switch */}
                     <div className="range-toggle-container" style={{ marginBottom: '24px' }}>
                         <button
                             className={`range-btn ${viewMode === 'audio' ? 'active' : ''}`}
@@ -260,7 +216,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                                 )}
                             </div>
 
-                            {/* Collection List */}
                             <div className="items-list">
                                 {collections.length === 0 ? (
                                     <div className="empty-hint">No playlists yet</div>
@@ -297,7 +252,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                                 )}
                             </div>
 
-                            {/* Audio List */}
                             <div className="items-list">
                                 {savedAudios.length === 0 ? (
                                     <div className="empty-hint">No audios added</div>
@@ -305,8 +259,8 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                                     savedAudios.map(audio => (
                                         <div
                                             key={audio.id}
-                                            className={`list-item track-item ${currentAudioId === audio.id ? 'active' : ''}`}
-                                            onClick={() => { onSelect(audio.id); onClose(); }}
+                                            className={`list-item track-item ${activeAudioId === audio.id ? 'active' : ''}`}
+                                            onClick={() => { onSelectAudio(audio.id); navigate(-1); }}
                                         >
                                             <div className="track-thumb" style={{ backgroundImage: audio.thumbnail ? `url(${audio.thumbnail})` : 'none' }}>
                                                 {!audio.thumbnail && (audio.type === 'youtube' ? '▶' : '♫')}
@@ -347,8 +301,8 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 {tracksToDisplay.map(audio => (
                     <div
                         key={audio.id}
-                        className={`list-item track-item ${currentAudioId === audio.id ? 'active' : ''}`}
-                        onClick={() => { onSelect(audio.id); onClose(); }}
+                        className={`list-item track-item ${activeAudioId === audio.id ? 'active' : ''}`}
+                        onClick={() => { onSelectAudio(audio.id); navigate(-1); }}
                     >
                         <div className="track-thumb" style={{ backgroundImage: audio.thumbnail ? `url(${audio.thumbnail})` : 'none' }}>
                             {!audio.thumbnail && (audio.type === 'youtube' ? '▶' : '♫')}
@@ -357,7 +311,6 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                             <span className="track-name">{audio.name}</span>
                             <span className="track-artist">{audio.creator || 'Unknown'}</span>
                         </div>
-                        {/* In collection view, remove means remove from collection */}
                         <button
                             className="btn-delete-track"
                             onClick={(e) => { e.stopPropagation(); setItemToDelete({ type: 'audio', id: audio.id }); }}
@@ -408,7 +361,25 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
     };
 
     return (
-        <BaseModal isOpen={isOpen} onClose={onClose} title={<span>&nbsp;</span>}>
+        <div className="screen-content" style={{ paddingBottom: '100px' }}>
+            {/* Header */}
+            <div className="screen-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <button onClick={() => {
+                        if (currentView !== 'root') {
+                            setNavPath(['root']);
+                        } else {
+                            navigate(-1);
+                        }
+                    }} className="btn-icon-back">
+                        <ArrowLeft size={28} />
+                    </button>
+                    <h2 className="screen-title">
+                        {currentView === 'root' ? 'Background Audio' : (activeCollection ? activeCollection.name : 'All Tracks')}
+                    </h2>
+                </div>
+            </div>
+
             <ConfirmModal
                 isOpen={!!itemToDelete}
                 onClose={() => setItemToDelete(null)}
@@ -420,25 +391,19 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
             />
 
             <div className="playlist-manager">
-                <div className="pm-header">
-                    {renderHeader()}
-                </div>
-
                 <div className="pm-content">
                     {renderList()}
                 </div>
-
                 {renderAddOverlay()}
-
-
             </div>
 
+            {/* Styles Ported from AudioModal */}
             <style>{`
                 .playlist-manager {
                     display: flex;
                     flex-direction: column;
                     height: 100%;
-                    max-height: 60vh;
+                    width: 100%;
                 }
                 .section-header-row {
                     display: flex;
@@ -481,12 +446,12 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 }
                 /* Overlay Styles */
                 .add-overlay {
-                    position: absolute;
+                    position: fixed;
                     top: 0;
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    z-index: 50;
+                    z-index: 200;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -505,7 +470,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 .add-card {
                     position: relative;
                     z-index: 2;
-                    background: rgba(20, 20, 20, 0.65);
+                    background: rgba(20, 20, 20, 0.95);
                     backdrop-filter: blur(16px);
                     -webkit-backdrop-filter: blur(16px);
                     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -564,8 +529,8 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     background: rgba(255,255,255,0.05);
                 }
                 .btn-confirm {
-                    background: var(--primary-color);
-                    border: 1px solid var(--primary-color);
+                    background: var(--primary);
+                    border: 1px solid var(--primary);
                     color: white;
                 }
                 .btn-confirm:hover {
@@ -573,35 +538,8 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     transform: translateY(-1px);
                 }
                 
-                .pm-header {
-                    margin-bottom: 16px;
-                    border-bottom: 1px solid var(--border-color);
-                    padding-bottom: 12px;
-                }
-                .modal-header-title {
-                    font-size: 1.25rem;
-                    font-weight: 600;
-                    color: var(--text-primary);
-                }
-                .modal-header-with-back {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    font-size: 1.1rem;
-                    font-weight: 600;
-                    color: var(--text-primary);
-                }
-                .modal-header-with-back button {
-                    background: none;
-                    border: none;
-                    font-size: 1.5rem;
-                    cursor: pointer;
-                    color: var(--text-primary);
-                    padding: 0 8px;
-                }
                 .pm-content {
                     flex: 1;
-                    overflow-y: auto;
                     display: flex;
                     flex-direction: column;
                     gap: 8px;
@@ -622,8 +560,8 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     border-color: rgba(255,255,255,0.1);
                 }
                 .list-item.active {
-                    background: rgba(var(--primary-rgb), 0.1);
-                    border-color: var(--primary-color);
+                    background: rgba(99, 102, 241, 0.1);
+                    border-color: var(--primary);
                 }
                 .folder-icon {
                     font-size: 1.5rem;
@@ -687,13 +625,48 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     transition: all 0.2s;
                 }
                 .btn-add-row:hover {
-                    border-color: var(--primary-color);
-                    color: var(--primary-color);
-                    background: rgba(var(--primary-rgb), 0.05);
+                    border-color: var(--primary);
+                    color: var(--primary);
+                    background: rgba(99, 102, 241, 0.05);
+                }
+                .btn-icon-back {
+                    background: none;
+                    border: none;
+                    color: var(--text-primary);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0;
+                }
+
+                /* Reuse Range Toggle Styles */
+                .range-toggle-container {
+                    display: flex;
+                    background: var(--surface);
+                    padding: 4px;
+                    border-radius: 12px;
+                    margin-bottom: 24px;
+                }
+                .range-btn {
+                    flex: 1;
+                    padding: 8px;
+                    border: none;
+                    background: transparent;
+                    color: var(--text-secondary);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                }
+                .range-btn.active {
+                    background: var(--background);
+                    color: var(--text-primary);
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 }
             `}</style>
-        </BaseModal>
+        </div>
     );
 };
 
-export default AudioModal;
+export default AudioLibraryScreen;

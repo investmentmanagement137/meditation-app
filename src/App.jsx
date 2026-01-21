@@ -4,7 +4,9 @@ import SetupScreen from './screens/SetupScreen';
 import TimerScreen from './screens/TimerView';
 import DashboardScreen from './screens/DashboardScreen';
 import LogsScreen from './screens/LogsScreen';
-import MyAIScreen from './screens/MyAIScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import AudioLibraryScreen from './screens/AudioLibraryScreen';
+
 import Layout from './components/Layout';
 import EndNoteModal from './modals/EndNoteModal';
 import AudioModal from './modals/AudioModal';
@@ -111,9 +113,13 @@ function AppContent() {
     navigate('/timer');
   };
 
-  const handleEndSession = () => {
+  const handleEndSession = (actualDuration) => {
     if (document.exitFullscreen && document.fullscreenElement) {
       document.exitFullscreen().catch(e => console.log('Exit fullscreen failed:', e));
+    }
+    // Update session data with actual duration if provided, otherwise keep planned
+    if (actualDuration !== undefined) {
+      setSessionData(prev => ({ ...prev, actualDuration }));
     }
     setIsEndNoteOpen(true);
   };
@@ -123,16 +129,18 @@ function AppContent() {
   const handleSaveEndNote = (endNote) => {
     setIsEndNoteOpen(false);
 
+    // Use actual duration if available, otherwise planned duration
+    const finalDuration = sessionData.actualDuration !== undefined ? sessionData.actualDuration : sessionData.duration;
+
     const log = {
       id: Date.now(),
       startTime: sessionData.startTime || new Date().toISOString(),
       endTime: new Date().toISOString(),
-      duration: sessionData.duration,
+      duration: finalDuration, // Log the actual duration (or planned if actual missing)
       startNote: sessionData.note || null,
       endNote: endNote || null,
       emotions: sessionAnalysis?.emotions || [],
       causes: sessionAnalysis?.causes || [],
-      model: sessionAnalysis?.model || null,
       model: sessionAnalysis?.model || null,
       tokens: sessionAnalysis?.usage?.totalTokenCount || null,
       audioDetails: savedAudios.find(a => a.id === sessionData.audioId) || null
@@ -187,8 +195,27 @@ function AppContent() {
               onDeleteLog={handleDeleteLog}
             />
           } />
-          <Route path="/my-ai" element={
-            <MyAIScreen />
+          <Route path="/settings" element={
+            <SettingsScreen
+              savedAudios={savedAudios}
+              selectedAudioId={selectedAudioId}
+              onOpenAudioModal={() => setIsAudioModalOpen(true)}
+              onOpenDurationModal={() => setIsDurationModalOpen(true)}
+              onOpenIntervalModal={() => setIsIntervalModalOpen(true)}
+            />
+          } />
+          <Route path="/audio" element={
+            <AudioLibraryScreen
+              activeAudioId={selectedAudioId}
+              onSelectAudio={(id) => {
+                console.log("Audio Selected:", id);
+                setSelectedAudioId(id);
+              }}
+              savedAudios={savedAudios}
+              setSavedAudios={setSavedAudios}
+              collections={collections}
+              setCollections={setCollections}
+            />
           } />
         </Route>
 

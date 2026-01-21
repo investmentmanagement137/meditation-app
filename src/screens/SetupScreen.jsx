@@ -89,9 +89,9 @@ const SetupScreen = ({
         <>
             <div className="screen-content">
                 <div className="screen-header" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                    <h2 className="screen-title">
                         {getGreeting()}
-                    </div>
+                    </h2>
 
                     <button
                         className="theme-toggle"
