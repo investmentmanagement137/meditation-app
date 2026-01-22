@@ -12,59 +12,42 @@ const SettingsScreen = ({
     savedAudios,
     selectedAudioId,
     onOpenAudioModal,
-    onOpenDurationModal,
-    onOpenIntervalModal
+    onOpenStartBellModal,
+    onOpenIntervalBellModal,
+    onOpenThemeModal,
+    onOpenClockModal,
+    onOpenAIModal,
+
+    // Status Props for display
+    startSound,
+    intervalSound,
+    clockLayout,
+    apiKey
 }) => {
     const navigate = useNavigate();
-    // --- State ---
-    const [totalSilence, setTotalSilence] = useLocalStorage('settings_silence', false);
-    const [minimalDesign, setMinimalDesign] = useLocalStorage('settings_minimal', true);
+    const [selectedAudio, setSelectedAudio] = useState(null);
 
-    const selectedAudio = savedAudios.find(a => a.id === selectedAudioId) || null;
+    // --- Preferences State ---
+    const [totalSilence, setTotalSilence] = useLocalStorage('pref_total_silence', false);
+    const [disableQuotes, setDisableQuotes] = useLocalStorage('pref_minimal_design', false); // Reuse KEY or new? Reuse 'minimal' as it means same thing functionally
 
-    // --- Theme Logic ---
-    const [isDark, setIsDark] = useState(true);
+    const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
+        // Just for display updating if theme changes elsewhere
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
-            setIsDark(false);
-        } else if (savedTheme === 'dark') {
-            setIsDark(true);
-        } else {
-            const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            setIsDark(isSystemDark);
-        }
-    }, []);
-
-    const toggleTheme = () => {
-        const root = document.documentElement;
-        if (root.classList.contains('dark')) {
-            root.classList.remove('dark');
-            root.classList.add('light');
-            localStorage.setItem('theme', 'light');
-            setIsDark(false);
-        } else {
-            root.classList.remove('light');
-            root.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-            setIsDark(true);
-        }
-    };
-
-    // --- AI State ---
-    const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
-    const [tempKey, setTempKey] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
+        setIsDark(savedTheme === 'dark');
+    }, []); // Or listen to storage event/prop if we want instant update without reload, but Modal handles global toggle
 
     useEffect(() => {
-        if (apiKey) setTempKey(apiKey);
-    }, [apiKey]);
+        if (selectedAudioId && selectedAudioId !== '1') {
+            const found = savedAudios.find(a => a.id === selectedAudioId);
+            setSelectedAudio(found || null);
+        } else {
+            setSelectedAudio(null);
+        }
+    }, [selectedAudioId, savedAudios]);
 
-    const handleSaveKey = () => {
-        setApiKey(tempKey);
-        setIsEditing(false);
-    };
 
     // --- Components ---
     const Toggle = ({ checked, onChange }) => (
@@ -77,7 +60,7 @@ const SettingsScreen = ({
     const SettingsItem = ({ icon, colorClass, title, subtitle, rightElement, onClick }) => (
         <div className="settings-item" onClick={onClick}>
             <div className="settings-item-content">
-                <div className={`settings-item-icon ${colorClass}`}>
+                <div className={`settings-item-icon ${colorClass} centered-icon`}>
                     {icon}
                 </div>
                 <div className="settings-item-text">
@@ -89,11 +72,40 @@ const SettingsScreen = ({
         </div>
     );
 
+    const handleShare = async () => {
+        const appUrl = window.location.origin + "/meditation-app";
+        try { await navigator.clipboard.writeText(appUrl); } catch (e) { console.log(e); }
+        navigate('/share');
+    };
+
     return (
         <div className="screen-content">
             <div className="screen-header">
                 <h2 className="screen-title">Settings</h2>
             </div>
+
+            <style>{`
+                .centered-icon {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 40px; 
+                    height: 40px;
+                    border-radius: 12px;
+                    flex-shrink: 0;
+                }
+                .settings-section-title {
+                    margin: 24px 0 12px 4px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: var(--text-secondary);
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                .section-group {
+                    margin-bottom: 24px;
+                }
+            `}</style>
 
             <div className="settings-container" style={{ width: '100%', paddingBottom: '40px' }}>
 
@@ -108,144 +120,121 @@ const SettingsScreen = ({
                     <div className="settings-email">guest@meditation.app</div>
                 </div>
 
-                {/* Preferences Card */}
-                <div className="settings-card">
-                    <SettingsItem
-                        icon={<VolumeX size={20} />}
-                        colorClass="icon-purple"
-                        title="Total Silence"
-                        subtitle="Silence all sounds during meditation"
-                        rightElement={<Toggle checked={totalSilence} onChange={setTotalSilence} />}
-                    />
-                    <SettingsItem
-                        icon={<Zap size={20} />}
-                        colorClass="icon-blue"
-                        title="Minimalistic design"
-                        subtitle="Show minimum info during meditation"
-                        rightElement={<Toggle checked={minimalDesign} onChange={setMinimalDesign} />}
-                    />
+                {/* AUDIO SETTINGS SECTION */}
+                <div className="section-group">
+                    <h3 className="settings-section-title">Audio Settings</h3>
+                    <div className="settings-card">
+                        <SettingsItem
+                            icon={<VolumeX size={20} />}
+                            colorClass="icon-purple"
+                            title="Total Silence"
+                            subtitle="Silence all sounds during meditation"
+                            rightElement={<Toggle checked={totalSilence} onChange={setTotalSilence} />}
+                        />
+                        <SettingsItem
+                            icon={<Clock size={20} />}
+                            colorClass="icon-cyan"
+                            title="Starting Bell"
+                            subtitle={startSound === 'none' ? 'None' : 'Bell Sound 1'}
+                            onClick={onOpenStartBellModal}
+                        />
+                        <SettingsItem
+                            icon={<Bell size={20} />}
+                            colorClass="icon-orange"
+                            title="Interval Bell"
+                            subtitle={intervalSound === 'none' ? 'None' : 'Bell Sound 2'}
+                            onClick={onOpenIntervalBellModal}
+                        />
+                        <SettingsItem
+                            icon={<Music size={20} />}
+                            colorClass="icon-pink"
+                            title="Background Audios"
+                            subtitle={selectedAudio ? `Current: ${selectedAudio.name}` : "Select background sounds"}
+                            onClick={() => navigate('/audio')}
+                        />
+                    </div>
                 </div>
 
-                {/* Sounds & Bells Card */}
-                <div className="settings-card">
-                    <SettingsItem
-                        icon={<Clock size={20} />}
-                        colorClass="icon-cyan"
-                        title="Starting Bell"
-                        subtitle="Select duration and start sound" // Modified purpose slightly as duration modal creates start context
-                        onClick={onOpenDurationModal}
-                    />
-                    <SettingsItem
-                        icon={<Bell size={20} />}
-                        colorClass="icon-orange"
-                        title="Interval Bell"
-                        subtitle="Select the interval bell sound"
-                        onClick={onOpenIntervalModal}
-                    />
-                    <SettingsItem
-                        icon={<Music size={20} />}
-                        colorClass="icon-pink"
-                        title="Background Audios"
-                        subtitle={selectedAudio ? `Current: ${selectedAudio.name}` : "Select background sounds"}
-                        onClick={() => navigate('/audio')}
-                    />
-
-
+                {/* DISPLAY SETTINGS SECTION */}
+                <div className="section-group">
+                    <h3 className="settings-section-title">Display Settings</h3>
+                    <div className="settings-card">
+                        <SettingsItem
+                            icon={<Zap size={20} />}
+                            colorClass="icon-blue"
+                            title="Disable Quotes"
+                            subtitle="Hide motivational quotes in timer"
+                            rightElement={<Toggle checked={disableQuotes} onChange={setDisableQuotes} />}
+                        />
+                        <SettingsItem
+                            icon={isDark ? <Moon size={20} /> : <Sun size={20} />}
+                            colorClass="icon-blue"
+                            title="Themes"
+                            subtitle={`Current: ${isDark ? 'Dark Mode' : 'Light Mode'}`}
+                            onClick={onOpenThemeModal}
+                        />
+                        <SettingsItem
+                            icon={<Clock size={20} />}
+                            colorClass="icon-orange"
+                            title="Clock Layout"
+                            subtitle={`Current: ${clockLayout === 'analog' ? 'Analog' : 'Digital'}`}
+                            onClick={onOpenClockModal}
+                        />
+                    </div>
                 </div>
 
-                {/* Appearance Card */}
-                <div className="settings-card">
-                    <SettingsItem
-                        icon={isDark ? <Moon size={20} /> : <Sun size={20} />}
-                        colorClass="icon-blue"
-                        title="Themes"
-                        subtitle={`Current: ${isDark ? 'Dark Mode' : 'Light Mode'}`}
-                        onClick={toggleTheme}
-                        rightElement={<ChevronRight size={20} color="var(--text-secondary)" />} // Explicit chevron to imply navigate/action
-                    />
-                    <SettingsItem
-                        icon={<Clock size={20} />}
-                        colorClass="icon-orange"
-                        title="Clock Layout"
-                        subtitle="Select preferred clock layout"
-                    />
+                {/* MY AI SECTION */}
+                <div className="section-group">
+                    <h3 className="settings-section-title">My AI</h3>
+                    <div className="settings-card">
+                        <SettingsItem
+                            icon={<Bot size={20} />}
+                            colorClass="icon-purple"
+                            title="Gemini AI Configuration"
+                            subtitle={apiKey ? "Key Connected" : "Connect API Key"}
+                            rightElement={
+                                apiKey ? (
+                                    <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 'bold' }}>Active</span>
+                                ) : <ChevronRight size={20} />
+                            }
+                            onClick={onOpenAIModal}
+                        />
+                    </div>
                 </div>
 
-                {/* AI Features (Existing) */}
-                <div className="settings-card">
-                    <SettingsItem
-                        icon={<Bot size={20} />}
-                        colorClass="icon-purple"
-                        title="Gemini AI Configuration"
-                        subtitle={apiKey ? "Key Connected" : "Connect API Key"}
-                        rightElement={
-                            apiKey && !isEditing ? (
-                                <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 'bold' }}>Active</span>
-                            ) : <ChevronRight size={20} />
-                        }
-                        onClick={() => setIsEditing(!isEditing)}
-                    />
-
-                    {/* Inline AI Edit Form */}
-                    {isEditing && (
-                        <div style={{ padding: '0 24px 24px 24px' }}>
-                            <div style={{ background: 'var(--background)', padding: '16px', borderRadius: '16px', marginTop: '8px' }}>
-                                <p style={{ fontSize: '13px', lineHeight: '1.4', opacity: 0.8, marginBottom: '16px' }}>
-                                    Enter your Gemini API key to enable specific meditation insights.
-                                </p>
-                                <input
-                                    type="password"
-                                    value={tempKey}
-                                    onChange={(e) => setTempKey(e.target.value)}
-                                    placeholder="Paste API Key here"
-                                    className="api-input"
-                                    style={{ width: '100%', marginBottom: '12px', padding: '12px' }}
-                                />
-                                <button
-                                    onClick={handleSaveKey}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        background: 'var(--primary)',
-                                        color: 'white',
-                                        border: 'none',
-                                        fontWeight: '600'
-                                    }}
-                                >
-                                    {apiKey ? 'Update Key' : 'Save Key'}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Support Card */}
-                <div className="settings-card">
-                    <SettingsItem
-                        icon={<Share2 size={20} />}
-                        colorClass="icon-cyan"
-                        title="Share"
-                        subtitle="Link to share this app"
-                    />
-                    <SettingsItem
-                        icon={<Mail size={20} />}
-                        colorClass="icon-orange"
-                        title="Contact Us"
-                        subtitle="Provide us some feed back"
-                    />
-                    <SettingsItem
-                        icon={<FileText size={20} />}
-                        colorClass="icon-pink"
-                        title="Privacy Policy"
-                        subtitle="Select The Background Sounds"
-                    />
-                    <SettingsItem
-                        icon={<FileText size={20} />}
-                        colorClass="icon-green"
-                        title="Terms and Conditions"
-                        subtitle="Select the ending bell"
-                    />
+                {/* SUPPORT SECTION */}
+                <div className="section-group">
+                    <h3 className="settings-section-title">Support & Legal</h3>
+                    <div className="settings-card">
+                        <SettingsItem
+                            icon={<Share2 size={20} />}
+                            colorClass="icon-cyan"
+                            title="Share"
+                            subtitle="Link to share this app"
+                            onClick={handleShare}
+                        />
+                        <SettingsItem
+                            icon={<Mail size={20} />}
+                            colorClass="icon-orange"
+                            title="Contact Us"
+                            subtitle="Provide us some feedback"
+                            onClick={() => navigate('/contact')}
+                        />
+                        <SettingsItem
+                            icon={<FileText size={20} />}
+                            colorClass="icon-pink"
+                            title="Privacy Policy"
+                            subtitle="Review our privacy policy"
+                            onClick={() => navigate('/privacy')}
+                        />
+                        <SettingsItem
+                            icon={<FileText size={20} />}
+                            colorClass="icon-green"
+                            title="Terms and Conditions"
+                            subtitle="Review our terms"
+                            onClick={() => navigate('/terms')}
+                        />
+                    </div>
                 </div>
 
             </div>

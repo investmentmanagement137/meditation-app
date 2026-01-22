@@ -6,12 +6,21 @@ import DashboardScreen from './screens/DashboardScreen';
 import LogsScreen from './screens/LogsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import AudioLibraryScreen from './screens/AudioLibraryScreen';
+import ContactScreen from './screens/ContactScreen';
+import PrivacyScreen from './screens/PrivacyScreen';
+import TermsScreen from './screens/TermsScreen';
+import ShareScreen from './screens/ShareScreen';
 
 import Layout from './components/Layout';
 import EndNoteModal from './modals/EndNoteModal';
 import AudioModal from './modals/AudioModal';
 import DurationModal from './modals/DurationModal';
 import IntervalModal from './modals/IntervalModal';
+import StartBellModal from './modals/StartBellModal';
+import IntervalBellModal from './modals/IntervalBellModal';
+import ThemeModal from './modals/ThemeModal';
+import ClockModal from './modals/ClockModal';
+import APIKeyModal from './modals/APIKeyModal';
 import useLocalStorage from './hooks/useLocalStorage';
 
 // Global YouTube Player Reference
@@ -89,8 +98,17 @@ function AppContent() {
   const [sessionData, setSessionData] = useState({});
   const [isEndNoteOpen, setIsEndNoteOpen] = useState(false);
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
+
+  // Setup Modals
   const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
   const [isIntervalModalOpen, setIsIntervalModalOpen] = useState(false);
+
+  // Settings Modals
+  const [isStartBellModalOpen, setIsStartBellModalOpen] = useState(false);
+  const [isIntervalBellModalOpen, setIsIntervalBellModalOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [isClockModalOpen, setIsClockModalOpen] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   // -- Lifted State --
   const [durations, setDurations] = useLocalStorage('meditation_durations', [5, 10, 15, 20]);
@@ -105,6 +123,44 @@ function AppContent() {
   const [selectedInterval, setSelectedInterval] = useLocalStorage('selected_interval', '0');
   const [selectedAudioId, setSelectedAudioId] = useLocalStorage('last_audio_id', null);
 
+  const [startSound, setStartSound] = useLocalStorage('start_bell_sound', 'bell-1');
+  const [intervalSound, setIntervalSound] = useLocalStorage('interval_bell_sound', 'bell-2');
+  const [clockLayout, setClockLayout] = useLocalStorage('clock_layout', 'digital');
+  const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
+
+  // Theme Toggle Logic
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const checkTheme = () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        setIsDark(true);
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light'); // default or explicit light
+        setIsDark(false);
+      }
+    };
+    checkTheme();
+  }, []);
+
+  const toggleTheme = () => {
+    if (isDark) {
+      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      setIsDark(false);
+    } else {
+      localStorage.setItem('theme', 'dark');
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    }
+  };
+
+
   const handleStartSession = (data) => {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen denied:', e));
@@ -117,7 +173,6 @@ function AppContent() {
     if (document.exitFullscreen && document.fullscreenElement) {
       document.exitFullscreen().catch(e => console.log('Exit fullscreen failed:', e));
     }
-    // Update session data with actual duration if provided, otherwise keep planned
     if (actualDuration !== undefined) {
       setSessionData(prev => ({ ...prev, actualDuration }));
     }
@@ -128,15 +183,13 @@ function AppContent() {
 
   const handleSaveEndNote = (endNote) => {
     setIsEndNoteOpen(false);
-
-    // Use actual duration if available, otherwise planned duration
     const finalDuration = sessionData.actualDuration !== undefined ? sessionData.actualDuration : sessionData.duration;
 
     const log = {
       id: Date.now(),
       startTime: sessionData.startTime || new Date().toISOString(),
       endTime: new Date().toISOString(),
-      duration: finalDuration, // Log the actual duration (or planned if actual missing)
+      duration: finalDuration,
       startNote: sessionData.note || null,
       endNote: endNote || null,
       emotions: sessionAnalysis?.emotions || [],
@@ -158,7 +211,6 @@ function AppContent() {
   return (
     <div className="app-container min-h-screen bg-gray-50 dark:bg-gray-950">
       <Routes>
-        {/* Helper function to wrap components with Layout */}
         <Route element={<Layout />}>
           <Route path="/" element={
             <SetupScreen
@@ -195,22 +247,32 @@ function AppContent() {
               onDeleteLog={handleDeleteLog}
             />
           } />
+          <Route path="/contact" element={<ContactScreen />} />
+          <Route path="/privacy" element={<PrivacyScreen />} />
+          <Route path="/terms" element={<TermsScreen />} />
+          <Route path="/share" element={<ShareScreen />} />
           <Route path="/settings" element={
             <SettingsScreen
               savedAudios={savedAudios}
               selectedAudioId={selectedAudioId}
+              // Open Handlers
               onOpenAudioModal={() => setIsAudioModalOpen(true)}
-              onOpenDurationModal={() => setIsDurationModalOpen(true)}
-              onOpenIntervalModal={() => setIsIntervalModalOpen(true)}
+              onOpenStartBellModal={() => setIsStartBellModalOpen(true)}
+              onOpenIntervalBellModal={() => setIsIntervalBellModalOpen(true)}
+              onOpenThemeModal={() => setIsThemeModalOpen(true)}
+              onOpenClockModal={() => setIsClockModalOpen(true)}
+              onOpenAIModal={() => setIsAIModalOpen(true)}
+              // State
+              startSound={startSound}
+              intervalSound={intervalSound}
+              clockLayout={clockLayout}
+              apiKey={apiKey}
             />
           } />
           <Route path="/audio" element={
             <AudioLibraryScreen
               activeAudioId={selectedAudioId}
-              onSelectAudio={(id) => {
-                console.log("Audio Selected:", id);
-                setSelectedAudioId(id);
-              }}
+              onSelectAudio={setSelectedAudioId}
               savedAudios={savedAudios}
               setSavedAudios={setSavedAudios}
               collections={collections}
@@ -219,7 +281,6 @@ function AppContent() {
           } />
         </Route>
 
-        {/* Timer is standalone */}
         <Route path="/timer" element={
           <TimerScreen
             sessionConfig={sessionData}
@@ -228,11 +289,13 @@ function AppContent() {
             onEndSession={handleEndSession}
             setSessionAnalysis={setSessionAnalysis}
             onOpenAudioSettings={() => setIsAudioModalOpen(true)}
+            clockLayout={clockLayout}
+            startSound={startSound}
+            intervalSound={intervalSound}
           />
         } />
       </Routes>
 
-      {/* Global Modals */}
       <EndNoteModal
         isOpen={isEndNoteOpen}
         onClose={() => handleSaveEndNote(null)}
@@ -251,6 +314,7 @@ function AppContent() {
         setCollections={setCollections}
       />
 
+      {/* SETUP MODALS */}
       <DurationModal
         isOpen={isDurationModalOpen}
         onClose={() => setIsDurationModalOpen(false)}
@@ -264,9 +328,44 @@ function AppContent() {
         onClose={() => setIsIntervalModalOpen(false)}
         onSelect={setSelectedInterval}
         currentInterval={selectedInterval}
-        customIntervals={customIntervals}
-        setCustomIntervals={setCustomIntervals}
       />
+
+      {/* SETTINGS MODALS */}
+      <StartBellModal
+        isOpen={isStartBellModalOpen}
+        onClose={() => setIsStartBellModalOpen(false)}
+        startSound={startSound}
+        setStartSound={setStartSound}
+      />
+
+      <IntervalBellModal
+        isOpen={isIntervalBellModalOpen}
+        onClose={() => setIsIntervalBellModalOpen(false)}
+        intervalSound={intervalSound}
+        setIntervalSound={setIntervalSound}
+      />
+
+      <ThemeModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+      />
+
+      <ClockModal
+        isOpen={isClockModalOpen}
+        onClose={() => setIsClockModalOpen(false)}
+        clockLayout={clockLayout}
+        setClockLayout={setClockLayout}
+      />
+
+      <APIKeyModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        apiKey={apiKey}
+        setApiKey={setApiKey}
+      />
+
     </div>
   );
 }

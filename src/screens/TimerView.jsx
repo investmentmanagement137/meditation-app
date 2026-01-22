@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TimerRing from '../components/TimerRing';
 import QuoteCarousel from '../components/QuoteCarousel';
 import { useTimer } from '../hooks/useTimer';
@@ -12,12 +13,80 @@ const DEFAULT_QUOTES = [
     { text: "The present moment is filled with joy and happiness.", author: "Thich Nhat Hanh" }
 ];
 
-const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession, setSessionAnalysis, onOpenAudioSettings }) => {
+// --- Analog Clock Component ---
+const AnalogClock = ({ totalSeconds, remainingSeconds }) => {
+    // We want the clock hands to reflect *progress* or *time*?
+    // User asked for "Analogue clock". Usually implies real-time or elapsed time visually. 
+    // Let's make it a standard decorative analog clock that perhaps moves fast or just static?
+    // OR: A clock that represents the *remaining time* like a timer dial?
+    // The request said "digital and analogue clock options", implying replacing the 05:00 text.
+    // So let's make a visual clock face that shows the countdown minute/second hands.
+
+    const strokeWidth = 2;
+    const radius = 20; // smaller inside the ring
+    const center = 50; // svg viewBox center
+
+    // Calculate angles
+    // Seconds hand: 60s = 360deg
+    const sec = remainingSeconds % 60;
+    const secAngle = (sec / 60) * 360;
+
+    // Minute hand: duration minutes = 360deg? Or standard clock face?
+    // Standard clock face makes most sense for "Analog Clock".
+    // 00:00 -> hands at top. 
+    const min = Math.floor(remainingSeconds / 60);
+    // Let's assume max 60 min face for simplicity of an analog timer
+    const minAngle = (min / 60) * 360 + (sec / 60) * 6;
+
+    return (
+        <div className="analog-clock-wrapper" style={{ width: '120px', height: '120px', position: 'relative' }}>
+            <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                {/* Clock Face */}
+                <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.1" />
+
+                {/* Minute Hand */}
+                <line
+                    x1="50" y1="50"
+                    x2={50 + 35 * Math.cos(minAngle * Math.PI / 180)}
+                    y2={50 + 35 * Math.sin(minAngle * Math.PI / 180)}
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                {/* Second Hand */}
+                <line
+                    x1="50" y1="50"
+                    x2={50 + 40 * Math.cos(secAngle * Math.PI / 180)}
+                    y2={50 + 40 * Math.sin(secAngle * Math.PI / 180)}
+                    stroke="var(--primary)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                />
+
+                {/* Center Dot */}
+                <circle cx="50" cy="50" r="3" fill="currentColor" />
+            </svg>
+        </div>
+    );
+};
+
+const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession, setSessionAnalysis, onOpenAudioSettings, clockLayout, startSound, intervalSound }) => {
+    const navigate = useNavigate();
+
     // Logging for debug
     useEffect(() => {
         console.log("TimerScreen Mounted");
         return () => console.log("TimerScreen Unmounted");
     }, []);
+
+    // Redirect if no session config (e.g. direct URL access)
+    useEffect(() => {
+        if (!sessionConfig || !sessionConfig.sessionKey) {
+            console.log("No authentic session found, redirecting to Home");
+            navigate('/');
+        }
+    }, [sessionConfig, navigate]);
 
     // Screen Wake Lock
     useEffect(() => {
@@ -57,6 +126,10 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
     const [quotes, setQuotes] = useState(DEFAULT_QUOTES);
     const [geminiApiKey] = useLocalStorage('gemini_api_key', '');
 
+    // --- Preferences ---
+    const [totalSilence] = useLocalStorage('pref_total_silence', false);
+    const [disableQuotes] = useLocalStorage('pref_minimal_design', false); // "Disable Quotes"
+
     // Bells
     const bellsRef = useRef(null);
 
@@ -65,19 +138,42 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
         if (!bellsRef.current && AUDIO_ASSETS) {
             console.log("Initializing Bells");
             bellsRef.current = {
-                start: new Audio(AUDIO_ASSETS.START_BELL),
-                interval: new Audio(AUDIO_ASSETS.INTERVAL_BELL),
-                end: new Audio(AUDIO_ASSETS.END_BELL)
+                'bell-1': new Audio(AUDIO_ASSETS.START_BELL),
+                'bell-2': new Audio(AUDIO_ASSETS.INTERVAL_BELL),
+                'end': new Audio(AUDIO_ASSETS.END_BELL) // End bell usually fixed, optionally could be configurable
             };
         }
         return bellsRef.current;
     };
 
     const playBell = (type) => {
+        if (totalSilence) return; // Mute all bells if Total Silence is ON
+
+        // type: 'start', 'interval', 'end'
         const bells = getBells();
-        if (bells && bells[type]) {
-            bells[type].currentTime = 0;
-            bells[type].play().catch(e => console.log('Bell play warn:', e));
+        if (!bells) return;
+
+        let soundKey;
+        if (type === 'start') soundKey = startSound;
+        else if (type === 'interval') soundKey = intervalSound;
+        else soundKey = 'end'; // 'end' bell fixed for now unless requested
+
+        if (soundKey === 'none') {
+            console.log(`Skipping ${type} bell (None selected)`);
+            return;
+        }
+
+        // Map start/interval types to specific asset keys if using generic names in storage
+        // But here we stored 'bell-1', 'bell-2' directly. 
+        // Fallback or mapping:
+        const audioObj = bells[soundKey] || bells['bell-1']; // Default fallback if key not found?
+
+        // Actually, if soundKey is 'bell-1' or 'bell-2' that matches our keys.
+        // If type is 'end', soundKey is 'end'.
+
+        if (audioObj) {
+            audioObj.currentTime = 0;
+            audioObj.play().catch(e => console.log('Bell play warn:', e));
         }
     };
 
@@ -169,6 +265,12 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
         // Use activeAudioId if provided (live switching), otherwise session config fallback
         const targetAudioId = activeAudioId !== undefined ? activeAudioId : audioId;
 
+        if (totalSilence) {
+            console.log("Total Silence Active - Muting Audio");
+            stopAudio();
+            return;
+        }
+
         if (targetAudioId && targetAudioId !== '1') { // '1' is None
             const track = savedAudios.find(a => a.id === targetAudioId);
             if (track) {
@@ -181,7 +283,7 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
             console.log("Stopping Audio (None selected)");
             stopAudio();
         }
-    }, [activeAudioId, audioId, savedAudios]);
+    }, [activeAudioId, audioId, savedAudios, totalSilence]); // Added totalSilence dependency
 
     useEffect(() => {
         if (isPaused) pauseAudio();
@@ -220,41 +322,66 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
 
     return (
         <div className="screen-content timer-container">
-            {/* Wrapper for relative positioning */}
-            <div className="timer-ring-wrapper">
-                <TimerRing totalSeconds={totalSecs} remainingSeconds={remainingSeconds} />
-
-                {/* Content Overlay */}
-                <div className="timer-content-overlay">
-                    {/* Quote Container */}
-                    <div className="timer-quote-container">
-                        <QuoteCarousel quotes={quotes} />
+            {/* Clock Display Logic - reused for positioning */}
+            {(() => {
+                const ClockDisplay = (
+                    <div className={`timer-clock-display ${clockLayout === 'analog' ? 'analog-mode' : ''}`}>
+                        {clockLayout === 'analog' ? (
+                            <AnalogClock totalSeconds={totalSecs} remainingSeconds={remainingSeconds} />
+                        ) : (
+                            <div className="timer-digital-clock">
+                                {m}:{s}
+                            </div>
+                        )}
                     </div>
+                );
 
-                    {/* Audio Icon with Swipe Area */}
-                    <div
-                        className="timer-audio-btn-wrapper"
-                        onTouchStart={onTouchStart}
-                        onTouchEnd={onTouchEnd}
-                    >
-                        <button
-                            className="icon-btn timer-audio-btn"
-                            onClick={onOpenAudioSettings}
-                            title="Change Audio (Swipe Left/Right to Cycle)"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
-                                <path d="M0 0h24v24H0V0z" fill="none" />
-                                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
+                return (
+                    <>
+                        {/* Wrapper for relative positioning */}
+                        <div className="timer-ring-wrapper">
+                            {/* Ring hidden if 'Disable Quotes' (Minimal Design) is ON */}
+                            {!disableQuotes && (
+                                <TimerRing totalSeconds={totalSecs} remainingSeconds={remainingSeconds} />
+                            )}
 
-            {/* Digital Clock - Enlarged */}
-            <div className="timer-digital-clock">
-                {m}:{s}
-            </div>
+                            {/* Content Overlay */}
+                            <div className="timer-content-overlay">
+                                {/* Clock MOVED HERE if Disable Quotes is ON (Centered) */}
+                                {disableQuotes && ClockDisplay}
+
+                                {/* Quote Container - Hidden if Disable Quotes is checked */}
+                                {!disableQuotes && (
+                                    <div className="timer-quote-container">
+                                        <QuoteCarousel quotes={quotes} />
+                                    </div>
+                                )}
+
+                                {/* Audio Icon with Swipe Area */}
+                                <div
+                                    className="timer-audio-btn-wrapper"
+                                    onTouchStart={onTouchStart}
+                                    onTouchEnd={onTouchEnd}
+                                >
+                                    <button
+                                        className="icon-btn timer-audio-btn"
+                                        onClick={onOpenAudioSettings}
+                                        title="Change Audio (Swipe Left/Right to Cycle)"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
+                                            <path d="M0 0h24v24H0V0z" fill="none" />
+                                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clock at BOTTOM if Disable Quotes is OFF (Standard Layout) */}
+                        {!disableQuotes && ClockDisplay}
+                    </>
+                );
+            })()}
 
             {/* Controls */}
             <div className="timer-controls-wrapper">
@@ -264,6 +391,7 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
                             <path d="M0 0h24v24H0V0z" fill="none" />
                             <path d="M8 5v14l11-7L8 5z" />
                         </svg>
+
                     ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 0 24 24" width="32" fill="currentColor">
                             <path d="M0 0h24v24H0V0z" fill="none" />
