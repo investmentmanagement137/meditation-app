@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TimerRing from '../components/TimerRing';
+import CircularCountdown from '../components/CircularCountdown';
 import QuoteCarousel from '../components/QuoteCarousel';
 import { useTimer } from '../hooks/useTimer';
 import { useAudio } from '../hooks/useAudio';
@@ -328,6 +329,8 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
                     <div className={`timer-clock-display ${clockLayout === 'analog' ? 'analog-mode' : ''}`}>
                         {clockLayout === 'analog' ? (
                             <AnalogClock totalSeconds={totalSecs} remainingSeconds={remainingSeconds} />
+                        ) : clockLayout === 'circular' ? (
+                            null
                         ) : (
                             <div className="timer-digital-clock">
                                 {m}:{s}
@@ -340,41 +343,74 @@ const TimerScreen = ({ sessionConfig, activeAudioId, onSelectAudio, onEndSession
                     <>
                         {/* Wrapper for relative positioning */}
                         <div className="timer-ring-wrapper">
-                            {/* Ring hidden if 'Disable Quotes' (Minimal Design) is ON */}
-                            {!disableQuotes && (
+                            {/* Ring hidden if 'Disable Quotes' (Minimal Design) is ON, OR if Circular Timer is used */}
+                            {!disableQuotes && clockLayout !== 'circular' && (
                                 <TimerRing totalSeconds={totalSecs} remainingSeconds={remainingSeconds} />
                             )}
 
-                            {/* Content Overlay */}
-                            <div className="timer-content-overlay">
-                                {/* Clock MOVED HERE if Disable Quotes is ON (Centered) */}
-                                {disableQuotes && ClockDisplay}
-
-                                {/* Quote Container - Hidden if Disable Quotes is checked */}
-                                {!disableQuotes && (
-                                    <div className="timer-quote-container">
-                                        <QuoteCarousel quotes={quotes} />
-                                    </div>
-                                )}
-
-                                {/* Audio Icon with Swipe Area */}
-                                <div
-                                    className="timer-audio-btn-wrapper"
-                                    onTouchStart={onTouchStart}
-                                    onTouchEnd={onTouchEnd}
+                            {/* Circular Layout - Always Visible (?) or follows minimal rules? 
+                                User requested "A circle with depleting area". It replaces the clock and ring. 
+                                It should probably be visible even in minimal mode, as it IS the center timer. 
+                            */}
+                            {clockLayout === 'circular' && (
+                                <CircularCountdown
+                                    totalSeconds={totalSecs}
+                                    remainingSeconds={remainingSeconds}
+                                    size={300}
                                 >
-                                    <button
-                                        className="icon-btn timer-audio-btn"
-                                        onClick={onOpenAudioSettings}
-                                        title="Change Audio (Swipe Left/Right to Cycle)"
+                                    {/* Pass Audio Button as child for Center Placement */}
+                                    <div
+                                        className="timer-audio-btn-wrapper-circular"
+                                        onTouchStart={onTouchStart}
+                                        onTouchEnd={onTouchEnd}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
-                                            <path d="M0 0h24v24H0V0z" fill="none" />
-                                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                                        </svg>
-                                    </button>
+                                        <button
+                                            className="icon-btn timer-audio-btn"
+                                            onClick={onOpenAudioSettings}
+                                            title="Change Audio"
+                                            style={{ width: '40px', height: '40px', background: 'var(--surface)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" fill="currentColor">
+                                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </CircularCountdown>
+                            )}
+
+                            {/* Content Overlay - Only for Non-Circular methods OR if we want shared overlays */}
+                            {clockLayout !== 'circular' && (
+                                <div className="timer-content-overlay">
+                                    {/* Clock MOVED HERE if Disable Quotes is ON (Centered) */}
+                                    {disableQuotes && ClockDisplay}
+
+                                    {/* Quote Container - Hidden if Disable Quotes is checked */}
+                                    {!disableQuotes && (
+                                        <div className="timer-quote-container">
+                                            <QuoteCarousel quotes={quotes} />
+                                        </div>
+                                    )}
+
+                                    {/* Audio Icon with Swipe Area - Only show here if NOT circular (since Circular has it inside) */}
+                                    <div
+                                        className="timer-audio-btn-wrapper"
+                                        onTouchStart={onTouchStart}
+                                        onTouchEnd={onTouchEnd}
+                                    >
+                                        <button
+                                            className="icon-btn timer-audio-btn"
+                                            onClick={onOpenAudioSettings}
+                                            title="Change Audio (Swipe Left/Right to Cycle)"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor">
+                                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Clock at BOTTOM if Disable Quotes is OFF (Standard Layout) */}

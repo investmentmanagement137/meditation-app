@@ -1,12 +1,12 @@
 import React from 'react';
 import BaseModal from '../components/BaseModal';
-import { Check, Clock, Hash } from 'lucide-react';
+import { Check, Clock, Hash, Circle } from 'lucide-react';
 
 const ClockModal = ({ isOpen, onClose, clockLayout, setClockLayout }) => {
 
     const options = [
         { id: 'digital', label: 'Digital Clock (05:00)', icon: <Hash size={20} /> },
-        { id: 'analog', label: 'Analog Clock (Visual)', icon: <Clock size={20} /> }
+        { id: 'circular', label: 'Circular Timer', icon: <Circle size={20} /> }
     ];
 
     return (

@@ -201,6 +201,8 @@ function AppContent() {
 
     setLogs(prev => [...prev, log]);
     setSessionAnalysis(null);
+    // Clear session data for fresh start next time
+    setSessionData({});
     navigate('/dashboard');
   };
 
@@ -267,6 +269,7 @@ function AppContent() {
               intervalSound={intervalSound}
               clockLayout={clockLayout}
               apiKey={apiKey}
+              isDark={isDark}
             />
           } />
           <Route path="/audio" element={

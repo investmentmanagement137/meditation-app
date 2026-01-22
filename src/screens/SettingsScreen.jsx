@@ -22,22 +22,17 @@ const SettingsScreen = ({
     startSound,
     intervalSound,
     clockLayout,
-    apiKey
+    apiKey,
+    isDark // Received from App
 }) => {
     const navigate = useNavigate();
     const [selectedAudio, setSelectedAudio] = useState(null);
 
     // --- Preferences State ---
     const [totalSilence, setTotalSilence] = useLocalStorage('pref_total_silence', false);
-    const [disableQuotes, setDisableQuotes] = useLocalStorage('pref_minimal_design', false); // Reuse KEY or new? Reuse 'minimal' as it means same thing functionally
+    const [disableQuotes, setDisableQuotes] = useLocalStorage('pref_minimal_design', false);
 
-    const [isDark, setIsDark] = useState(false);
-
-    useEffect(() => {
-        // Just for display updating if theme changes elsewhere
-        const savedTheme = localStorage.getItem('theme');
-        setIsDark(savedTheme === 'dark');
-    }, []); // Or listen to storage event/prop if we want instant update without reload, but Modal handles global toggle
+    // Local isDark state REMOVED to rely on prop for sync
 
     useEffect(() => {
         if (selectedAudioId && selectedAudioId !== '1') {
@@ -77,6 +72,30 @@ const SettingsScreen = ({
         try { await navigator.clipboard.writeText(appUrl); } catch (e) { console.log(e); }
         navigate('/share');
     };
+
+    // Helper for Clock Label
+    const getClockLabel = () => {
+        if (clockLayout === 'circular') return 'Circular';
+        return 'Digital';
+    };
+
+    // --- Scroll Restoration ---
+    useEffect(() => {
+        // Restore scroll on mount
+        const scrollKey = 'settings_scroll_pos';
+        const savedPos = sessionStorage.getItem(scrollKey);
+        if (savedPos) {
+            // slight delay to ensure layout is ready
+            requestAnimationFrame(() => {
+                window.scrollTo(0, parseInt(savedPos, 10));
+            });
+        }
+
+        // Save scroll on unmount
+        return () => {
+            sessionStorage.setItem(scrollKey, window.scrollY);
+        };
+    }, []);
 
     return (
         <div className="screen-content">
@@ -177,7 +196,7 @@ const SettingsScreen = ({
                             icon={<Clock size={20} />}
                             colorClass="icon-orange"
                             title="Clock Layout"
-                            subtitle={`Current: ${clockLayout === 'analog' ? 'Analog' : 'Digital'}`}
+                            subtitle={`Current: ${getClockLabel()}`}
                             onClick={onOpenClockModal}
                         />
                     </div>

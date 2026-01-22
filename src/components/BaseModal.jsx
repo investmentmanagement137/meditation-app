@@ -33,8 +33,11 @@ const BaseModal = ({ isOpen, onClose, title, children }) => {
                     animation: fadeIn 0.2s ease-out;
                 }
                 .modal-content {
-                    /* Solid background for popups as requested */
-                    background: #1e293b; 
+                    /* Solid background using Theme Variable */
+                    background: var(--background); 
+                    /* Color */
+                    color: var(--text-primary);
+
                     width: 100%;
                     max-width: 400px;
                     border-radius: 20px 20px 0 0; /* Top rounded for bottom sheet */
@@ -42,18 +45,11 @@ const BaseModal = ({ isOpen, onClose, title, children }) => {
                     padding-bottom: 40px;
                     box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
                     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    border: var(--border-line);
                 }
                 
-                /* Light Mode Override for Modal Content */
-                :global(.light) .modal-content {
-                     background: #ffffff !important;
-                }
-
-                /* Ensure dark mode stays solid */
-                :global(.dark) .modal-content {
-                     background: #1e293b !important;
-                }
-                }
+                /* Removed Hardcoded Light/Dark Overrides in favor of CSS variables */
+                
                 @media (min-width: 640px) {
                     .modal-overlay {
                         align-items: center;
