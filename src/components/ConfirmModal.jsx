@@ -1,26 +1,30 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Delete', cancelText = 'Cancel' }) => {
     if (!isOpen) return null;
 
-    return (
+    return ReactDOM.createPortal(
         <div style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
             backgroundColor: 'rgba(0,0,0,0.6)',
-            zIndex: 1100, // Higher than BaseModal (1000)
+            zIndex: 9999, // High z-index to ensure visibility
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
         }} onClick={(e) => { e.stopPropagation(); onClose(); }}>
             <div style={{
-                background: '#1a1a2e', // Solid background
+                background: 'var(--surface)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
                 padding: '24px',
                 borderRadius: '16px',
                 width: '300px',
                 textAlign: 'center',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-                border: '1px solid var(--border-color)'
+                border: 'var(--border-line)',
+                color: 'var(--text-primary)'
             }} onClick={(e) => e.stopPropagation()}>
                 <h3 style={{ marginTop: 0, marginBottom: '12px' }}>{title}</h3>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>{message}</p>
@@ -33,7 +37,8 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

@@ -132,7 +132,11 @@ const ReminderScreen = () => {
                     border-radius: 50%;
                     background: var(--surface);
                     border: 2px solid var(--border-line);
-                    display: flex; alignItems: center; justifyContent: center;
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    margin: 0;
+                    padding: 0;
                     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
                 .pulse-circle.active {

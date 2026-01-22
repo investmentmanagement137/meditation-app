@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import SetupScreen from './screens/SetupScreen';
 import TimerScreen from './screens/TimerView';
 import DashboardScreen from './screens/DashboardScreen';
@@ -149,6 +149,25 @@ function AppContent() {
         const today = now.toDateString();
 
         if (lastTriggered !== today) {
+          // Play Sound
+          try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+              const ctx = new AudioContext();
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(500, ctx.currentTime);
+              osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+              gain.gain.setValueAtTime(0.1, ctx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+              osc.start();
+              osc.stop(ctx.currentTime + 0.5);
+            }
+          } catch (e) { console.error(e); }
+
           new Notification('Time to Meditate', {
             body: 'Take a moment for yourself.',
             icon: '/icon-192.png'
@@ -436,9 +455,9 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter basename="/meditation-app">
+    <HashRouter>
       <AppContent />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
