@@ -10,6 +10,7 @@ import ContactScreen from './screens/ContactScreen';
 import PrivacyScreen from './screens/PrivacyScreen';
 import TermsScreen from './screens/TermsScreen';
 import ShareScreen from './screens/ShareScreen';
+import ReminderScreen from './screens/ReminderScreen';
 
 import Layout from './components/Layout';
 import EndNoteModal from './modals/EndNoteModal';
@@ -128,6 +129,39 @@ function AppContent() {
   const [clockLayout, setClockLayout] = useLocalStorage('clock_layout', 'digital');
   const [apiKey, setApiKey] = useLocalStorage('gemini_api_key', '');
 
+  // -- Preferences --
+  const [hideJournaling] = useLocalStorage('pref_hide_journaling', false);
+  const [reminderEnabled] = useLocalStorage('reminder_enabled', false);
+  const [reminderTime] = useLocalStorage('reminder_time', '08:00');
+
+  // --- Reminder Logic ---
+  useEffect(() => {
+    const checkReminder = () => {
+      if (!reminderEnabled) return;
+
+      const now = new Date();
+      const currentHours = String(now.getHours()).padStart(2, '0');
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+      const currentTime = `${currentHours}:${currentMinutes}`;
+
+      if (currentTime === reminderTime && now.getSeconds() < 10) {
+        const lastTriggered = localStorage.getItem('last_reminder_date');
+        const today = now.toDateString();
+
+        if (lastTriggered !== today) {
+          new Notification('Time to Meditate', {
+            body: 'Take a moment for yourself.',
+            icon: '/icon-192.png'
+          });
+          localStorage.setItem('last_reminder_date', today);
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkReminder, 10000);
+    return () => clearInterval(intervalId);
+  }, [reminderEnabled, reminderTime]);
+
   // Theme Toggle Logic
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
@@ -176,7 +210,33 @@ function AppContent() {
     if (actualDuration !== undefined) {
       setSessionData(prev => ({ ...prev, actualDuration }));
     }
-    setIsEndNoteOpen(true);
+
+    // Check if Journaling is HIDDEN
+    if (hideJournaling) {
+      // Save immediately without opening EndNoteModal
+      let durationToUse = actualDuration;
+      if (durationToUse === undefined) durationToUse = sessionData.duration;
+
+      const log = {
+        id: Date.now(),
+        startTime: sessionData.startTime || new Date().toISOString(),
+        endTime: new Date().toISOString(),
+        duration: durationToUse,
+        startNote: null,
+        endNote: null,
+        emotions: [],
+        causes: [],
+        model: null,
+        tokens: null,
+        audioDetails: savedAudios.find(a => a.id === sessionData.audioId) || null
+      };
+      setLogs(prev => [...prev, log]);
+      setSessionAnalysis(null);
+      setSessionData({});
+      navigate('/dashboard');
+    } else {
+      setIsEndNoteOpen(true);
+    }
   };
 
   const [sessionAnalysis, setSessionAnalysis] = useState(null);
@@ -253,6 +313,7 @@ function AppContent() {
           <Route path="/privacy" element={<PrivacyScreen />} />
           <Route path="/terms" element={<TermsScreen />} />
           <Route path="/share" element={<ShareScreen />} />
+          <Route path="/reminder" element={<ReminderScreen />} />
           <Route path="/settings" element={
             <SettingsScreen
               savedAudios={savedAudios}

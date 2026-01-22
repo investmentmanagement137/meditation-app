@@ -31,6 +31,7 @@ const SettingsScreen = ({
     // --- Preferences State ---
     const [totalSilence, setTotalSilence] = useLocalStorage('pref_total_silence', false);
     const [disableQuotes, setDisableQuotes] = useLocalStorage('pref_minimal_design', false);
+    const [hideJournaling, setHideJournaling] = useLocalStorage('pref_hide_journaling', false);
 
     // Local isDark state REMOVED to rely on prop for sync
 
@@ -139,6 +140,20 @@ const SettingsScreen = ({
                     <div className="settings-email">guest@meditation.app</div>
                 </div>
 
+                {/* REMINDERS SECTION */}
+                <div className="section-group">
+                    <h3 className="settings-section-title">Daily</h3>
+                    <div className="settings-card">
+                        <SettingsItem
+                            icon={<Bell size={20} />}
+                            colorClass="icon-purple"
+                            title="Daily Reminders"
+                            subtitle="Set a time to meditate"
+                            onClick={() => navigate('/reminder')}
+                        />
+                    </div>
+                </div>
+
                 {/* AUDIO SETTINGS SECTION */}
                 <div className="section-group">
                     <h3 className="settings-section-title">Audio Settings</h3>
@@ -184,6 +199,13 @@ const SettingsScreen = ({
                             title="Disable Quotes"
                             subtitle="Hide motivational quotes in timer"
                             rightElement={<Toggle checked={disableQuotes} onChange={setDisableQuotes} />}
+                        />
+                        <SettingsItem
+                            icon={<FileText size={20} />}
+                            colorClass="icon-green"
+                            title="Hide Journaling"
+                            subtitle="Hide Intention & End Notes"
+                            rightElement={<Toggle checked={hideJournaling} onChange={setHideJournaling} />}
                         />
                         <SettingsItem
                             icon={isDark ? <Moon size={20} /> : <Sun size={20} />}

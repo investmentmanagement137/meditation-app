@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import useLocalStorage from '../hooks/useLocalStorage';
 import DurationSelector from '../components/DurationSelector';
 import IntervalSelector from '../components/IntervalSelector';
 import AudioSelector from '../components/AudioSelector';
@@ -85,6 +86,9 @@ const SetupScreen = ({
         }
     };
 
+    // --- Preferences ---
+    const [hideJournaling] = useLocalStorage('pref_hide_journaling', false);
+
     return (
         <>
             <div className="screen-content">
@@ -131,20 +135,22 @@ const SetupScreen = ({
                         <AudioSelector selectedAudio={selectedAudio} onOpenModal={openAudioModal} />
                     </div>
 
-                    <div className="notes-section">
-                        <div className="section-title">Intention (Optional)</div>
-                        <textarea
-                            className="notes-input"
-                            placeholder="What is your intention for this session?"
-                            value={startNote}
-                            onChange={(e) => setStartNote(e.target.value)}
-                            onFocus={(e) => {
-                                setTimeout(() => {
-                                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                }, 300);
-                            }}
-                        ></textarea>
-                    </div>
+                    {!hideJournaling && (
+                        <div className="notes-section">
+                            <div className="section-title">Intention (Optional)</div>
+                            <textarea
+                                className="notes-input"
+                                placeholder="What is your intention for this session?"
+                                value={startNote}
+                                onChange={(e) => setStartNote(e.target.value)}
+                                onFocus={(e) => {
+                                    setTimeout(() => {
+                                        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }, 300);
+                                }}
+                            ></textarea>
+                        </div>
+                    )}
                 </div>
             </div>
 
