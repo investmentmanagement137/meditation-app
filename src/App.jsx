@@ -22,7 +22,9 @@ import IntervalBellModal from './modals/IntervalBellModal';
 import ThemeModal from './modals/ThemeModal';
 import ClockModal from './modals/ClockModal';
 import APIKeyModal from './modals/APIKeyModal';
+
 import useLocalStorage from './hooks/useLocalStorage';
+import { AUDIO_ASSETS } from './conf/audioAssets';
 
 // Global YouTube Player Reference
 window.ytPlayer = null;
@@ -158,55 +160,72 @@ function AppContent() {
 
   // -- Preferences --
   const [hideJournaling] = useLocalStorage('pref_hide_journaling', false);
-  const [reminderEnabled] = useLocalStorage('reminder_enabled', false);
-  const [reminderTime] = useLocalStorage('reminder_time', '08:00');
+
+  // -- Multi-Reminder Upgrade --
+  const [reminders, setReminders] = useLocalStorage('meditation_reminders', []);
+
+  // Migration: If legacy reminder exists, move it to new array
+  useEffect(() => {
+    const legacyEnabled = localStorage.getItem('reminder_enabled');
+    const legacyTime = localStorage.getItem('reminder_time');
+
+    if (legacyEnabled !== null || legacyTime !== null) {
+      console.log("Migrating legacy reminder...");
+      let newReminders = [...reminders];
+      if (JSON.parse(legacyEnabled) === true) {
+        newReminders.push({
+          id: Date.now(),
+          time: JSON.parse(legacyTime) || '08:00',
+          enabled: true
+        });
+      }
+      setReminders(newReminders);
+      // Clear legacy
+      localStorage.removeItem('reminder_enabled');
+      localStorage.removeItem('reminder_time');
+    }
+  }, []);
 
   // --- Reminder Logic ---
   useEffect(() => {
-    const checkReminder = () => {
-      if (!reminderEnabled) return;
-
+    const checkReminders = () => {
       const now = new Date();
       const currentHours = String(now.getHours()).padStart(2, '0');
       const currentMinutes = String(now.getMinutes()).padStart(2, '0');
       const currentTime = `${currentHours}:${currentMinutes}`;
+      const today = now.toDateString();
 
-      if (currentTime === reminderTime && now.getSeconds() < 10) {
-        const lastTriggered = localStorage.getItem('last_reminder_date');
-        const today = now.toDateString();
+      reminders.forEach(reminder => {
+        if (!reminder.enabled) return;
 
-        if (lastTriggered !== today) {
-          // Play Sound
-          try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-              const ctx = new AudioContext();
-              const osc = ctx.createOscillator();
-              const gain = ctx.createGain();
-              osc.connect(gain);
-              gain.connect(ctx.destination);
-              osc.type = 'sine';
-              osc.frequency.setValueAtTime(500, ctx.currentTime);
-              osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
-              gain.gain.setValueAtTime(0.1, ctx.currentTime);
-              gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-              osc.start();
-              osc.stop(ctx.currentTime + 0.5);
-            }
-          } catch (e) { console.error(e); }
-
-          new Notification('Time to Meditate', {
-            body: 'Take a moment for yourself.',
-            icon: '/icon-192.png'
-          });
-          localStorage.setItem('last_reminder_date', today);
+        // Check Day (0 = Sun, 6 = Sat)
+        if (reminder.days && !reminder.days.includes(now.getDay())) {
+          return;
         }
-      }
+
+        // Check precise time match (and ensure not already triggered today for this specific reminder)
+        if (reminder.time === currentTime && now.getSeconds() < 10) {
+          const lastTriggerKey = `last_reminder_date_${reminder.id}`;
+          const lastTriggered = localStorage.getItem(lastTriggerKey);
+
+          if (lastTriggered !== today) {
+            // Play Interval Bell
+            const audio = new Audio(AUDIO_ASSETS.INTERVAL_BELL);
+            audio.play().catch(e => console.error("Reminder sound failed", e));
+
+            new Notification('Time to Meditate', {
+              body: 'Take a moment for yourself.',
+              icon: '/icon-192.png'
+            });
+            localStorage.setItem(lastTriggerKey, today);
+          }
+        }
+      });
     };
 
-    const intervalId = setInterval(checkReminder, 10000);
+    const intervalId = setInterval(checkReminders, 10000);
     return () => clearInterval(intervalId);
-  }, [reminderEnabled, reminderTime]);
+  }, [reminders]);
 
   // Theme Toggle Logic
   const [isDark, setIsDark] = useState(false);
@@ -359,7 +378,12 @@ function AppContent() {
           <Route path="/privacy" element={<PrivacyScreen />} />
           <Route path="/terms" element={<TermsScreen />} />
           <Route path="/share" element={<ShareScreen />} />
-          <Route path="/reminder" element={<ReminderScreen />} />
+          <Route path="/reminder" element={
+            <ReminderScreen
+              reminders={reminders}
+              setReminders={setReminders}
+            />
+          } />
           <Route path="/settings" element={
             <SettingsScreen
               savedAudios={savedAudios}
