@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Bell, Check } from 'lucide-react';
+import { ChevronLeft, Bell, Check, Clock } from 'lucide-react';
 import useLocalStorage from '../hooks/useLocalStorage';
 
 const ReminderScreen = () => {
@@ -36,83 +36,151 @@ const ReminderScreen = () => {
 
     return (
         <div className="screen-content">
-            <div className="screen-header">
+            {/* Header */}
+            <div className="screen-header" style={{ display: 'grid', gridTemplateColumns: '40px 1fr 40px', alignItems: 'center', padding: '0' }}>
                 <button
                     className="back-button"
                     onClick={() => navigate(-1)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', padding: '0' }}
                 >
                     <ChevronLeft size={28} />
                 </button>
-                <h2 className="screen-title" style={{ marginLeft: '12px' }}>Daily Reminder</h2>
+                <h2 className="screen-title" style={{ textAlign: 'center', margin: 0 }}>Daily Reminder</h2>
+                <div style={{ width: '40px' }}></div> {/* Spacer for alignment */}
             </div>
 
-            <div className="settings-container" style={{ padding: '24px 0' }}>
-                <div className="settings-card">
-                    <div className="settings-item">
-                        <div className="settings-item-content">
-                            <div className="settings-item-icon icon-purple centered-icon">
-                                <Bell size={20} />
-                            </div>
-                            <div className="settings-item-text">
-                                <div className="settings-item-title">Enable Daily Reminder</div>
-                                <div className="settings-item-subtitle">Get noticed to meditate everyday</div>
-                            </div>
-                        </div>
-                        <div
-                            className={`settings-toggle ${reminderEnabled ? 'active' : ''}`}
-                            onClick={() => handleToggle(!reminderEnabled)}
-                        />
-                    </div>
+            <div className="settings-container" style={{ padding: '20px', display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center' }}>
 
-                    {reminderEnabled && (
-                        <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
-                            <div className="settings-item-title" style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                                Select Time
-                            </div>
-                            <div style={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
+                {/* Hero Illustration - Pulse Effect */}
+                <div style={{ marginTop: '40px', marginBottom: '40px', position: 'relative' }}>
+                    <div className={`pulse-circle ${reminderEnabled ? 'active' : ''}`}>
+                        <Bell size={40} color="white" fill={reminderEnabled ? "white" : "none"} />
+                    </div>
+                </div>
+
+                {/* Main Action Card */}
+                <div style={{ width: '100%', maxWidth: '340px' }}>
+                    <h1 style={{
+                        fontSize: '18px',
+                        textAlign: 'center',
+                        marginBottom: '8px',
+                        color: 'var(--text-primary)',
+                        opacity: reminderEnabled ? 1 : 0.6
+                    }}>
+                        {reminderEnabled ? "Reminder Active" : "Reminder Inactive"}
+                    </h1>
+
+                    <p style={{
+                        textAlign: 'center',
+                        color: 'var(--text-secondary)',
+                        fontSize: '14px',
+                        marginBottom: '32px'
+                    }}>
+                        {reminderEnabled ? "We'll notify you every day at the scheduled time." : "Enable reminders to build a habit."}
+                    </p>
+
+                    {/* Time Input & Toggle Container */}
+                    <div className="glass-panel" style={{ padding: '24px', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
+
+                        {/* Toggle Row */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: reminderEnabled ? '32px' : '0' }}>
+                            <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>Turn On</span>
+                            <div
+                                className={`settings-toggle ${reminderEnabled ? 'active' : ''}`}
+                                onClick={() => handleToggle(!reminderEnabled)}
+                            />
+                        </div>
+
+                        {/* Expandable Time Selection */}
+                        <div className={`time-section ${reminderEnabled ? 'open' : ''}`}>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: '8px' }}>
                                 <input
                                     type="time"
                                     value={reminderTime}
                                     onChange={(e) => setReminderTime(e.target.value)}
-                                    style={{
-                                        fontSize: '32px',
-                                        fontWeight: 'bold',
-                                        padding: '12px 24px',
-                                        borderRadius: '16px',
-                                        border: '1px solid var(--border-line)',
-                                        background: 'var(--surface)',
-                                        color: 'var(--text-primary)',
-                                        outline: 'none',
-                                        fontFamily: 'Outfit, sans-serif'
-                                    }}
+                                    className="hero-time-input"
                                 />
                             </div>
+                            <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                                <span className="pill-tag">
+                                    <Clock size={12} style={{ marginRight: '4px' }} />
+                                    Every Day
+                                </span>
+                            </div>
                         </div>
-                    )}
+
+                    </div>
                 </div>
 
                 {!isPermissionGranted && reminderEnabled && (
-                    <div style={{ padding: '16px', marginTop: '16px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontSize: '14px' }}>
-                        Notifications are blocked. Please enable them in your browser settings.
+                    <div style={{ marginTop: '24px', padding: '12px 20px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', fontSize: '13px', textAlign: 'center' }}>
+                        Notifications are not allowed. Please enable them in browser settings.
                     </div>
                 )}
-
-                <div style={{ marginTop: '24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                    Tips: Keep this tab open or install the app to receive notifications reliably.
-                </div>
             </div>
 
             <style>{`
-                .centered-icon {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 40px; 
-                    height: 40px;
-                    border-radius: 12px;
+                .glass-panel {
+                    background: var(--surface);
+                    border: 1px solid var(--border-line);
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+                    transition: all 0.3s ease;
                 }
-                .icon-purple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+                
+                .pulse-circle {
+                    width: 80px; height: 80px;
+                    border-radius: 50%;
+                    background: var(--surface);
+                    border: 2px solid var(--border-line);
+                    display: flex; alignItems: center; justifyContent: center;
+                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                .pulse-circle.active {
+                    background: #8b5cf6;
+                    border-color: #8b5cf6;
+                    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0.2);
+                    transform: scale(1.1);
+                }
+
+                .hero-time-input {
+                    font-size: 48px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    font-family: 'Outfit', sans-serif;
+                    text-align: center;
+                    width: 100%;
+                    cursor: pointer;
+                }
+                /* Hide browser defaults */
+                .hero-time-input::-webkit-calendar-picker-indicator {
+                    display: none;
+                }
+
+                .time-section {
+                    max-height: 0;
+                    opacity: 0;
+                    overflow: hidden;
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .time-section.open {
+                    max-height: 150px;
+                    opacity: 1;
+                }
+
+                .pill-tag {
+                    display: inline-flex; alignItems: center;
+                    background: rgba(139, 92, 246, 0.1);
+                    color: #a78bfa;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                }
             `}</style>
         </div>
     );
