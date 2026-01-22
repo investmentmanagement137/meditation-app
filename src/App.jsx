@@ -100,6 +100,33 @@ function AppContent() {
   const [isEndNoteOpen, setIsEndNoteOpen] = useState(false);
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
 
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+      console.log("PWA Install Prompt captured");
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    setDeferredPrompt(null);
+  };
+
   // Setup Modals
   const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
   const [isIntervalModalOpen, setIsIntervalModalOpen] = useState(false);
@@ -350,6 +377,9 @@ function AppContent() {
               clockLayout={clockLayout}
               apiKey={apiKey}
               isDark={isDark}
+              // PWA
+              deferredPrompt={deferredPrompt}
+              onInstallApp={handleInstallApp}
             />
           } />
           <Route path="/audio" element={

@@ -5,7 +5,7 @@ import AudioSelector from '../components/AudioSelector';
 import {
     Sparkles, Key, Bot, Settings, Volume2,
     VolumeX, Moon, Sun, Bell, Clock,
-    Music, Share2, Mail, FileText, ChevronRight, Zap
+    Music, Share2, Mail, FileText, ChevronRight, Zap, Download
 } from 'lucide-react';
 
 const SettingsScreen = ({
@@ -23,7 +23,11 @@ const SettingsScreen = ({
     intervalSound,
     clockLayout,
     apiKey,
-    isDark // Received from App
+    isDark, // Received from App
+
+    // PWA
+    deferredPrompt,
+    onInstallApp
 }) => {
     const navigate = useNavigate();
     const [selectedAudio, setSelectedAudio] = useState(null);
@@ -261,6 +265,16 @@ const SettingsScreen = ({
                             subtitle="Provide us some feedback"
                             onClick={() => navigate('/contact')}
                         />
+                        {/* PWA Install Button - Only exists if installable */}
+                        {deferredPrompt && (
+                            <SettingsItem
+                                icon={<Download size={20} />}
+                                colorClass="icon-purple"
+                                title="Install App"
+                                subtitle="Add to Home Screen"
+                                onClick={onInstallApp}
+                            />
+                        )}
                         <SettingsItem
                             icon={<FileText size={20} />}
                             colorClass="icon-pink"
