@@ -5,7 +5,7 @@ import AudioSelector from '../components/AudioSelector';
 import {
     Sparkles, Key, Bot, Settings, Volume2,
     VolumeX, Moon, Sun, Bell, Clock,
-    Music, Share2, Mail, FileText, ChevronRight, Zap, Download
+    Music, Share2, Mail, FileText, ChevronRight, Zap, Download, CheckCircle
 } from 'lucide-react';
 
 const SettingsScreen = ({
@@ -265,16 +265,44 @@ const SettingsScreen = ({
                             subtitle="Provide us some feedback"
                             onClick={() => navigate('/contact')}
                         />
-                        {/* PWA Install Button - Only exists if installable */}
-                        {deferredPrompt && (
-                            <SettingsItem
-                                icon={<Download size={20} />}
-                                colorClass="icon-purple"
-                                title="Install App"
-                                subtitle="Add to Home Screen"
-                                onClick={onInstallApp}
-                            />
-                        )}
+                        {/* PWA Install Button - Adaptive State */}
+                        {(() => {
+                            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+                            if (deferredPrompt) {
+                                return (
+                                    <SettingsItem
+                                        icon={<Download size={20} />}
+                                        colorClass="icon-purple"
+                                        title="Install App"
+                                        subtitle="Add to Home Screen"
+                                        onClick={onInstallApp}
+                                    />
+                                );
+                            } else if (isStandalone) {
+                                return (
+                                    <SettingsItem
+                                        icon={<CheckCircle size={20} />}
+                                        colorClass="icon-green"
+                                        title="App Installed"
+                                        subtitle="Running as PWA"
+                                        rightElement={<span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Active</span>}
+                                        onClick={() => { }}
+                                    />
+                                );
+                            } else {
+                                // Fallback for iOS or when prompt is unavailable - Instructions
+                                return (
+                                    <SettingsItem
+                                        icon={<Download size={20} />}
+                                        colorClass="icon-purple"
+                                        title="Install App"
+                                        subtitle="Use browser menu to install"
+                                        onClick={() => alert("To install:\n1. Open Browser Menu (Share or 3-dots)\n2. Select 'Add to Home Screen'")}
+                                    />
+                                );
+                            }
+                        })()}
                         <SettingsItem
                             icon={<FileText size={20} />}
                             colorClass="icon-pink"
