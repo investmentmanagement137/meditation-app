@@ -505,9 +505,9 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 .add-card {
                     position: relative;
                     z-index: 2;
-                    background: rgba(20, 20, 20, 0.65);
-                    backdrop-filter: blur(16px);
-                    -webkit-backdrop-filter: blur(16px);
+                    background: #1e293b;
+                    backdrop-filter: none;
+                    -webkit-backdrop-filter: none;
                     border: 1px solid rgba(255, 255, 255, 0.1);
                     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
                     border-radius: 16px;
@@ -526,7 +526,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                 .add-title {
                     font-size: 1.1rem;
                     font-weight: 600;
-                    color: var(--text-primary);
+                    color: #ffffff;
                     margin: 0;
                 }
                 .add-input {
@@ -534,7 +534,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     border: 1px solid rgba(255, 255, 255, 0.1);
                     border-radius: 8px;
                     padding: 12px;
-                    color: var(--text-primary);
+                    color: #ffffff;
                     font-size: 1rem;
                     width: 100%;
                 }

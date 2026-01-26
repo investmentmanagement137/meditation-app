@@ -88,12 +88,12 @@ const TimePickerModal = ({ isOpen, onClose, onSave, initialTime = "08:00", initi
                     background: var(--surface);
                     border: 2px solid var(--primary);
                     border-radius: 24px;
-                    padding: 8px 32px;
+                    padding: 8px 16px;
                     box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
                 }
 
                 .modal-time-input {
-                    font-size: 3rem;
+                    font-size: 2.5rem;
                     font-weight: 700;
                     color: var(--text-primary);
                     background: transparent;
@@ -101,7 +101,7 @@ const TimePickerModal = ({ isOpen, onClose, onSave, initialTime = "08:00", initi
                     outline: none;
                     font-family: 'Outfit', sans-serif;
                     text-align: center;
-                    min-width: 180px;
+                    width: 100%;
                 }
                 .modal-time-input::-webkit-calendar-picker-indicator {
                     filter: invert(1) opacity(0.5);

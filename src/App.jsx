@@ -194,7 +194,11 @@ function AppContent() {
 
             new Notification('Time to Meditate', {
               body: 'Take a moment for yourself.',
-              icon: '/icon-192.png'
+              icon: '/icon-192.png',
+              vibrate: [200, 100, 200],
+              tag: 'meditation-reminder',
+              renotify: true,
+              requireInteraction: true
             });
             localStorage.setItem(lastTriggerKey, today);
           }
