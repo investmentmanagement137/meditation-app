@@ -11,6 +11,7 @@ import PrivacyScreen from './screens/PrivacyScreen';
 import TermsScreen from './screens/TermsScreen';
 import ShareScreen from './screens/ShareScreen';
 import ReminderScreen from './screens/ReminderScreen';
+import DiscoverScreen from './screens/DiscoverScreen';
 import ReloadPrompt from './components/ReloadPrompt';
 import InstallPrompt from './components/InstallPrompt';
 
@@ -423,6 +424,14 @@ function AppContent() {
             <AudioLibraryScreen
               activeAudioId={selectedAudioId}
               onSelectAudio={setSelectedAudioId}
+              savedAudios={savedAudios}
+              setSavedAudios={setSavedAudios}
+              collections={collections}
+              setCollections={setCollections}
+            />
+          } />
+          <Route path="/discover" element={
+            <DiscoverScreen
               savedAudios={savedAudios}
               setSavedAudios={setSavedAudios}
               collections={collections}

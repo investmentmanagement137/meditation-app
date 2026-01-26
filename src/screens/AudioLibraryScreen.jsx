@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AudioUtils } from '../hooks/useAudio';
 import ConfirmModal from '../components/ConfirmModal';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, Sparkles, ChevronRight } from 'lucide-react';
+import { FEATURED_PLAYLISTS } from '../conf/featuredPlaylists';
 
 const AudioLibraryScreen = ({
     activeAudioId,
@@ -14,9 +15,9 @@ const AudioLibraryScreen = ({
 }) => {
     const navigate = useNavigate();
 
-    // Navigation State: ['root'] -> ['library'] or ['collection', 'id']
+    // Navigation State: ['root'] -> collectionId
     const [navPath, setNavPath] = useState(['root']);
-    const currentView = navPath[navPath.length - 1]; // 'root', 'library', or collectionId
+    const currentView = navPath[navPath.length - 1];
     const [viewMode, setViewMode] = useState('audio'); // 'audio' | 'playlist'
 
     // "Add Audio" or "Create Collection" Input State
@@ -189,6 +190,18 @@ const AudioLibraryScreen = ({
             return (
                 <div className="list-group-root">
                     {/* Toggle Switch */}
+                    {/* Discovery Banner */}
+                    <div className="discover-promo" onClick={() => navigate('/discover')}>
+                        <div className="promo-icon">
+                            <Sparkles size={24} className="text-amber-400" />
+                        </div>
+                        <div className="promo-text">
+                            <span className="promo-label">Sound Library</span>
+                            <span className="promo-title">Discover New Playlists</span>
+                        </div>
+                        <ChevronRight size={20} className="promo-arrow" />
+                    </div>
+
                     <div className="range-toggle-container" style={{ marginBottom: '24px' }}>
                         <button
                             className={`range-btn ${viewMode === 'audio' ? 'active' : ''}`}
@@ -239,6 +252,7 @@ const AudioLibraryScreen = ({
                             </div>
                         </div>
                     )}
+
 
                     {/* VIEW: ALL AUDIOS */}
                     {viewMode === 'audio' && (
@@ -663,6 +677,130 @@ const AudioLibraryScreen = ({
                     background: var(--background);
                     color: var(--text-primary);
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+
+                /* Discover Promo Banner */
+                .discover-promo {
+                    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+                    border: 1px solid rgba(245, 158, 11, 0.2);
+                    border-radius: 16px;
+                    padding: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-bottom: 24px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .discover-promo:hover {
+                    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+                    transform: translateY(-2px);
+                    border-color: rgba(245, 158, 11, 0.4);
+                }
+                .promo-icon {
+                    width: 48px;
+                    height: 48px;
+                    background: rgba(245, 158, 11, 0.1);
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .promo-text {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .promo-label {
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    color: var(--amber-400, #f59e0b);
+                    font-weight: 700;
+                    margin-bottom: 2px;
+                }
+                .promo-title {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                }
+                .promo-arrow {
+                    color: rgba(245, 158, 11, 0.4);
+                }
+
+                /* Discover Grid */
+                .discover-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 16px;
+                    padding-bottom: 20px;
+                }
+                .discover-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 16px;
+                    overflow: hidden;
+                    transition: transform 0.2s, background 0.2s;
+                }
+                .discover-card:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    transform: translateY(-2px);
+                }
+                .discover-card-img {
+                    height: 140px;
+                    background-size: cover;
+                    background-position: center;
+                    position: relative;
+                }
+                .btn-install {
+                    position: absolute;
+                    bottom: 12px;
+                    right: 12px;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    background: var(--primary);
+                    color: white;
+                    border: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    transition: all 0.2s;
+                }
+                .btn-install:hover {
+                    transform: scale(1.1);
+                    background: var(--primary-hover, var(--primary));
+                }
+                .btn-install.installed {
+                    background: #22c55e;
+                    cursor: default;
+                }
+                .discover-card-content {
+                    padding: 12px;
+                }
+                .discover-card-title {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    margin: 0 0 4px 0;
+                    color: var(--text-primary);
+                }
+                .discover-card-desc {
+                    font-size: 0.85rem;
+                    color: var(--text-secondary);
+                    margin: 0 0 12px 0;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                .discover-card-footer {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 0.75rem;
+                    color: var(--text-secondary);
                 }
             `}</style>
         </div>

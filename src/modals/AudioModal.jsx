@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BaseModal from '../components/BaseModal';
 import { AudioUtils } from '../hooks/useAudio';
 import ConfirmModal from '../components/ConfirmModal';
+import { Sparkles, ChevronRight } from 'lucide-react';
 
 const DEFAULT_AUDIOS = [
     { id: '1', name: 'None', type: 'none' }
 ];
 
 const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, setSavedAudios, collections = [], setCollections }) => {
+    const navigate = useNavigate();
 
     // Navigation State: ['root'] -> ['library'] or ['collection', 'id']
     const [navPath, setNavPath] = useState(['root']);
@@ -231,8 +234,8 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
         // A. Root View
         if (currentView === 'root') {
             return (
-                <div className="list-group-root">
-                    {/* Toggle Switch (Audio | Playlist) */}
+                <div className="list-group-root" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Toggle Switch (Audio | Playlist | Discover) */}
                     <div className="range-toggle-container" style={{ marginBottom: '24px' }}>
                         <button
                             className={`range-btn ${viewMode === 'audio' ? 'active' : ''}`}
@@ -246,6 +249,13 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                         >
                             Playlist
                         </button>
+                    </div>
+
+                    {/* Discovery Link */}
+                    <div className="discover-modal-link" onClick={() => { onClose(); navigate('/discover'); }}>
+                        <div className="dm-icon"><Sparkles size={18} /></div>
+                        <div className="dm-text">Explore Featured Playlists</div>
+                        <ChevronRight size={16} />
                     </div>
 
                     {/* VIEW: PLAYLISTS */}
@@ -284,6 +294,7 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                             </div>
                         </div>
                     )}
+
 
                     {/* VIEW: ALL AUDIOS */}
                     {viewMode === 'audio' && (
@@ -690,6 +701,34 @@ const AudioModal = ({ isOpen, onClose, onSelect, currentAudioId, savedAudios, se
                     border-color: var(--primary-color);
                     color: var(--primary-color);
                     background: rgba(var(--primary-rgb), 0.05);
+                }
+
+                .discover-modal-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 16px;
+                    background: linear-gradient(90deg, rgba(251, 191, 36, 0.1) 0%, transparent 100%);
+                    border-radius: 12px;
+                    border: 1px solid rgba(251, 191, 36, 0.2);
+                    margin-bottom: 24px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .discover-modal-link:hover {
+                    background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, transparent 100%);
+                    border-color: rgba(251, 191, 36, 0.4);
+                    transform: translateX(4px);
+                }
+                .dm-icon {
+                    color: #fbbf24;
+                    display: flex;
+                }
+                .dm-text {
+                    flex: 1;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
                 }
             `}</style>
         </BaseModal>
