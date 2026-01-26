@@ -517,7 +517,6 @@ function AppContent() {
       />
 
       <ReloadPrompt />
-      <InstallPrompt canInstall={canInstall} isInstalled={isInstalled} isIOS={isIOS} installApp={installApp} />
     </div>
   );
 }
