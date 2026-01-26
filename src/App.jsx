@@ -28,6 +28,8 @@ import APIKeyModal from './modals/APIKeyModal';
 import useLocalStorage from './hooks/useLocalStorage';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { AUDIO_ASSETS } from './conf/audioAssets';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 
 // Global YouTube Player Reference
 window.ytPlayer = null;
@@ -165,48 +167,76 @@ function AppContent() {
     }
   }, []);
 
+  // Inside AppContent component
   // --- Reminder Logic ---
   useEffect(() => {
-    const checkReminders = () => {
+    // Request permissions on mount for Capacitor
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.requestPermissions();
+    }
+
+    const checkReminders = async () => {
       const now = new Date();
       const currentHours = String(now.getHours()).padStart(2, '0');
       const currentMinutes = String(now.getMinutes()).padStart(2, '0');
       const currentTime = `${currentHours}:${currentMinutes}`;
       const today = now.toDateString();
 
-      reminders.forEach(reminder => {
-        if (!reminder.enabled) return;
+      for (const reminder of reminders) {
+        if (!reminder.enabled) continue;
 
         // Check Day (0 = Sun, 6 = Sat)
         if (reminder.days && !reminder.days.includes(now.getDay())) {
-          return;
+          continue;
         }
 
         // Check precise time match (and ensure not already triggered today for this specific reminder)
-        if (reminder.time === currentTime && now.getSeconds() < 10) {
+        // We add a broader window (seconds < 60) because setInterval might drift, but we lock with localStorage
+        if (reminder.time === currentTime) {
           const lastTriggerKey = `last_reminder_date_${reminder.id}`;
           const lastTriggered = localStorage.getItem(lastTriggerKey);
 
           if (lastTriggered !== today) {
-            // Play Interval Bell
-            const audio = new Audio(AUDIO_ASSETS.INTERVAL_BELL);
-            audio.play().catch(e => console.error("Reminder sound failed", e));
 
-            new Notification('Time to Meditate', {
-              body: 'Take a moment for yourself.',
-              icon: '/icon-192.png',
-              vibrate: [200, 100, 200],
-              tag: 'meditation-reminder',
-              renotify: true,
-              requireInteraction: true
-            });
+            // Mark as triggered BEFORE firing to prevent double triggers
             localStorage.setItem(lastTriggerKey, today);
+
+            if (Capacitor.isNativePlatform()) {
+              // Use Capacitor Local Notifications
+              await LocalNotifications.schedule({
+                notifications: [
+                  {
+                    title: "Time to Meditate",
+                    body: "Take a moment for yourself.",
+                    id: reminder.id,
+                    schedule: { at: new Date(new Date().getTime() + 1000) }, // Schedule for 1s later
+                    sound: null, // Default system sound
+                    attachments: null,
+                    actionTypeId: "",
+                    extra: null
+                  }
+                ]
+              });
+            } else {
+              // Web Fallback
+              const audio = new Audio(AUDIO_ASSETS.INTERVAL_BELL);
+              audio.play().catch(e => console.error("Reminder sound failed", e));
+
+              new Notification('Time to Meditate', {
+                body: 'Take a moment for yourself.',
+                icon: '/icon-192.png',
+                vibrate: [200, 100, 200],
+                tag: 'meditation-reminder',
+                renotify: true,
+                requireInteraction: true
+              });
+            }
           }
         }
-      });
+      }
     };
 
-    const intervalId = setInterval(checkReminders, 10000);
+    const intervalId = setInterval(checkReminders, 5000); // Check every 5s for better precision
     return () => clearInterval(intervalId);
   }, [reminders]);
 
