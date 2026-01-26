@@ -496,6 +496,52 @@ h2 {
     transform: scale(1.1);
 }
 
+/* Custom Input Option */
+.custom-input-option {
+    padding: 0;
+    overflow: hidden;
+    min-width: 60px;
+    /* Ensure input has space */
+}
+
+.duration-custom-input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    padding: 0;
+}
+
+/* Remove Arrows from Number Input */
+.duration-custom-input::-webkit-outer-spin-button,
+.duration-custom-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.duration-custom-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.duration-option.selected .duration-custom-input {
+    color: white;
+}
+
+.duration-custom-input::placeholder {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.duration-option.selected .duration-custom-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
 /* Button */
 .btn-primary {
     background: linear-gradient(135deg, var(--primary) 0%, #7c8fd8 100%);
@@ -1276,23 +1322,26 @@ input:checked+.slider:before {
 .content-area {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 140px;
-    /* Space for Nav + Sticky Button */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    /* Space for Nav + Sticky Button + Safe Area */
 }
 
 .bottom-navigation {
     position: absolute;
+    /* Changed from fixed to absolute */
     bottom: 0;
     left: 0;
     right: 0;
     height: 64px;
     background-color: var(--background);
     border-top: var(--border-line);
-    z-index: 100;
+    z-index: 1000;
+    /* High z-index to stay on top */
     display: flex;
     justify-content: center;
     padding-bottom: env(safe-area-inset-bottom);
     backdrop-filter: blur(10px);
+    width: 100%;
 }
 
 .nav-container {

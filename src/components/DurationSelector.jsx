@@ -1,4 +1,4 @@
-import React from 'react';
+import { Plus } from 'lucide-react';
 
 const DurationSelector = ({ durations, selectedDuration, onSelect, onAddClick }) => {
     return (
@@ -17,9 +17,11 @@ const DurationSelector = ({ durations, selectedDuration, onSelect, onAddClick })
                 </div>
             ))}
 
-            {/* Add Custom Button */}
-            <div className="duration-option" onClick={onAddClick}>
-                +
+
+
+            {/* Add Configuration Button */}
+            <div className="duration-option" onClick={onAddClick} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Plus size={20} />
             </div>
         </div>
     );

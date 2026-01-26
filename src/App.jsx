@@ -11,6 +11,8 @@ import PrivacyScreen from './screens/PrivacyScreen';
 import TermsScreen from './screens/TermsScreen';
 import ShareScreen from './screens/ShareScreen';
 import ReminderScreen from './screens/ReminderScreen';
+import ReloadPrompt from './components/ReloadPrompt';
+import InstallPrompt from './components/InstallPrompt';
 
 import Layout from './components/Layout';
 import EndNoteModal from './modals/EndNoteModal';
@@ -24,6 +26,7 @@ import ClockModal from './modals/ClockModal';
 import APIKeyModal from './modals/APIKeyModal';
 
 import useLocalStorage from './hooks/useLocalStorage';
+import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { AUDIO_ASSETS } from './conf/audioAssets';
 
 // Global YouTube Player Reference
@@ -103,31 +106,7 @@ function AppContent() {
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
 
   // PWA Install Prompt State
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Stash the event so it can be triggered later.
-      setDeferredPrompt(e);
-      console.log("PWA Install Prompt captured");
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallApp = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
-    setDeferredPrompt(null);
-  };
+  const { canInstall, isInstalled, isIOS, installApp } = useInstallPrompt();
 
   // Setup Modals
   const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
@@ -402,8 +381,8 @@ function AppContent() {
               apiKey={apiKey}
               isDark={isDark}
               // PWA
-              deferredPrompt={deferredPrompt}
-              onInstallApp={handleInstallApp}
+              deferredPrompt={canInstall}
+              onInstallApp={installApp}
             />
           } />
           <Route path="/audio" element={
@@ -503,6 +482,8 @@ function AppContent() {
         setApiKey={setApiKey}
       />
 
+      <ReloadPrompt />
+      <InstallPrompt canInstall={canInstall} isInstalled={isInstalled} isIOS={isIOS} installApp={installApp} />
     </div>
   );
 }
