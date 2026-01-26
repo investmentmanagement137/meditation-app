@@ -188,7 +188,7 @@ const SettingsScreen = ({
                             colorClass="icon-pink"
                             title="Background Audios"
                             subtitle={selectedAudio ? `Current: ${selectedAudio.name}` : "Select background sounds"}
-                            onClick={() => navigate('/audio')}
+                            onClick={onOpenAudioModal}
                         />
                     </div>
                 </div>
