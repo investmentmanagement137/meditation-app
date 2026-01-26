@@ -1395,6 +1395,29 @@ input:checked+.slider:before {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Mobile PWA Fix: Force Fixed Scroll */
+@media (max-width: 767px) {
+    .bottom-navigation {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+
+    .sticky-action-bar {
+        position: fixed;
+        /* Ensure it stays above nav */
+        bottom: calc(64px + 16px + env(safe-area-inset-bottom));
+        z-index: 90;
+    }
+
+    /* Ensure content has enough padding so it doesn't get hidden behind fixed nav */
+    .content-area {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    }
+}
+
 /* Hide Scrollbar */
 ::-webkit-scrollbar {
     width: 0px;
